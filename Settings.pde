@@ -158,11 +158,11 @@ class Settings {
 
   void saveJSONAtFilePath(String presetName) {
 
-    File folder = new File(sketchPath(folderName));
+    File folder = new File(sketchPath(savedPresetsFolder));
     if (!folder.exists()) {
       folder.mkdirs(); // Create the folder if it does not exist
     }
-    String filePath = sketchPath(folderName + File.separator + presetName + ".json");
+    String filePath = sketchPath(savedPresetsFolder + File.separator + presetName + ".json");
     // Save JSON to file
     saveJSONObject(presetExportData, filePath);
     println("Preset exported successfully.");
@@ -212,62 +212,77 @@ class Settings {
     }
     return fieldValues;
   }
-
-
-  void importPreset(String presetName) {
+  void importPreset(String presetName, boolean importDefaultPreset) {
+    String folderName;
+    if (importDefaultPreset) folderName = "default-presets";
+    else folderName = savedPresetsFolder;
     String filePath = folderName + File.separator + presetName + ".json";
-
-    // Load JSON with error handling
     JSONObject presetImportData;
+
     try {
       presetImportData = loadJSONObject(filePath);
     }
     catch (Exception e) {
       println("Error loading JSON file: " + e.getMessage());
-      return; // Stop if JSON loading fails
+      return;
     }
 
-    // Check if JSON is empty
     if (presetImportData == null || presetImportData.size() == 0) {
       println("Error: JSON file is empty or malformed.");
       return;
     }
 
-    println("settings length: " + settingsElements.size());
-    Field[] fields = this.getClass().getDeclaredFields();
-    int fieldCount = 0;
+    for (Object keyObj : presetImportData.keys()) {
+      String key = (String) keyObj;
+      Object jsonValue = presetImportData.get(key);
 
-    for (int i = 0; i < fields.length; i++) {
-      Field field = fields[i];
-      String fieldName = field.getName();
-
-      // Skip internal fields
-      if (fieldName.equals("settingsElements") || fieldName.equals("presetExportData")) {
-        continue;
-      }
-
-      // Check if field exists in JSON
-      if (!presetImportData.hasKey(fieldName)) {
-        println("Warning: Field " + fieldName + " missing in JSON data. Skipping.");
-        continue;
-      }
-
-      // Get field value from settingsElements safely
-      Object fieldValue;
       try {
-        fieldValue = settingsElements.get(fieldCount++);
-      }
-      catch (IndexOutOfBoundsException e) {
-        println("Warning: Not enough elements in settingsElements for field " + fieldName + ". Skipping.");
-        continue;
-      }
+        Field field = this.getClass().getDeclaredField(key);
+        field.setAccessible(true);
 
-      // Attempt to set the field from JSON
-      try {
-        setFieldFromJSON(field, fieldName, fieldValue, presetImportData);
+        if (jsonValue instanceof JSONArray) {
+          JSONArray jsonArray = (JSONArray) jsonValue;
+
+          // Handle float arrays
+          if (field.getType() == float[].class) {
+            float[] floatArray = new float[jsonArray.size()];
+            for (int i = 0; i < jsonArray.size(); i++) {
+              floatArray[i] = jsonArray.getFloat(i);
+            }
+            field.set(this, floatArray);
+
+            // Handle boolean arrays
+          } else if (field.getType() == boolean[].class) {
+            boolean[] boolArray = new boolean[jsonArray.size()];
+            for (int i = 0; i < jsonArray.size(); i++) {
+              boolArray[i] = jsonArray.getBoolean(i);
+            }
+            field.set(this, boolArray);
+
+            // Handle ArrayList<Float>
+          } else if (field.getType() == ArrayList.class) {
+            ArrayList<Float> floatList = new ArrayList<>();
+            for (int i = 0; i < jsonArray.size(); i++) {
+              floatList.add(jsonArray.getFloat(i));
+            }
+            field.set(this, floatList);
+          }
+        }
+
+        // Handle single float and boolean values directly
+        else if (jsonValue instanceof Float && field.getType() == float.class) {
+          field.setFloat(this, (Float) jsonValue);
+        } else if (jsonValue instanceof Boolean && field.getType() == boolean.class) {
+          field.setBoolean(this, (Boolean) jsonValue);
+        }
+
+        println("Updated " + key + " to " + jsonValue);
+      }
+      catch (NoSuchFieldException e) {
+        println("Field " + key + " not found, skipping.");
       }
       catch (Exception e) {
-        println("Error setting field " + fieldName + ": " + e.getMessage());
+        println("Error setting field " + key + ": " + e.getMessage());
       }
     }
   }
@@ -305,7 +320,7 @@ class Settings {
   }
 
   String[] getPresetsForImport() {
-    String directoryPath = sketchPath(folderName);
+    String directoryPath = sketchPath(savedPresetsFolder);
     File dir = new File(directoryPath);
 
     // Filter to only list .json files

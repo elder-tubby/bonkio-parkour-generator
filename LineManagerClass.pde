@@ -20,20 +20,24 @@ class LineManager implements Runnable {
 
     createFrameForProgram();
     if (settings.addFrames[0]) createFrames();
-    if (settings.addFloors[0]) createFloorsAsync();
-    // Check if floor generation is complete before starting lines
-    new Thread(() -> {
-      while (!isFloorsGenerationComplete) {
-        // Wait until floors are complete
-        try {
-          Thread.sleep(50);
+    if (settings.addFloors[0]) {
+
+      createFloorsAsync();
+
+      // Check if floor generation is complete before starting lines
+      new Thread(() -> {
+        while (!isFloorsGenerationComplete) {
+          // Wait until floors are complete
+          try {
+            Thread.sleep(50);
+          }
+          catch (InterruptedException e) { /* handle */
+          }
         }
-        catch (InterruptedException e) { /* handle */
-        }
+        if (noOfLines > 0) createLinesAsync();
       }
-      if (noOfLines > 0) createLinesAsync();
-    }
-    ).start();
+      ).start();
+    } else if (noOfLines > 0) createLinesAsync();
     if (settings.addBackground[0]) addBackground("BG Pattern 01");
   }
 
@@ -193,7 +197,7 @@ class LineManager implements Runnable {
 
     Line newLine = new Line(x, y, w, h, a, isDeath);
 
-    if (random(1) < settings.chancesOfNoJump[0]) newLine.setAsNoJump();
+    if (!isDeath && random(1) < settings.chancesOfNoJump[0]) newLine.setAsNoJump();
 
     connectCornerToAnExistingLine(newLine, settings.lineConnectAngleStart, settings.lineConnectAngleEnd);
     //println("isoutofframe: " + isLineOutOfFrame(newLine));
@@ -221,7 +225,7 @@ class LineManager implements Runnable {
       if (areLinesConnected(existingLine, newLine)) continue;
 
       if (!settings.canLinesOverlap[0]) {
-        if (isOverlapping(newLine, existingLine) && !areLinesConnected(existingLine, newLine)) {
+        if (isOverlapping(newLine, existingLine)) {
           //println("is overlapping: " + counterForOverlap++);
           return true;
         }
@@ -436,25 +440,34 @@ class LineManager implements Runnable {
           return lineToConnectWith;
         }
       } else if (!lineToMove.isFloor && lineToConnectWith.isFrame) {
+
         if (lineToMove.isDeath && random(1) < settings.chancesForDLinesToConnectWithFrames[0]) {
           return lineToConnectWith;
         }
         if (!lineToMove.isDeath && random(1) < settings.chancesForNonDLinesToConnectWithFrames[0]) {
           return lineToConnectWith;
         }
-      } else if (!lineToMove.isFloor && !lineToConnectWith.isFrame) { // lineToConnectWith can be either a floor or any line, and lineToMove is not floor
+      } else if (!lineToMove.isFloor && !lineToConnectWith.isFrame) {
 
-        //println("!lineToMove.isFloor && !lineToConnectWith.isFrame");
 
         if (connectNonDLinesAndDlines(lineToConnectWith, lineToMove)) { // lineToMove is either death or non-death
+
           return lineToConnectWith;
         }
         if (lineToMove.isDeath) {
           //println("lineToMove.isDeath");
+          boolean[] result =  new boolean[2];
+          boolean connectDLinesWithFloor = false;
+          boolean connectDLinesWithDLines = false;
 
-          boolean[] result = determineEvent(settings.chancesForDLinesToConnectWithFloors[0], settings.chancesForDLinesAndDLinesToConnect[0]);
-          boolean connectDLinesWithFloor = result[0];
-          boolean connectDLinesWithDLines = result[1];
+          if (settings.addFloors[0]) {
+            result = determineEvent(settings.chancesForDLinesToConnectWithFloors[0], settings.chancesForDLinesAndDLinesToConnect[0]);
+            connectDLinesWithDLines = result[1];
+          } else
+            connectDLinesWithDLines = settings.chancesForDLinesAndDLinesToConnect[0] > random(1);
+
+          connectDLinesWithFloor = result[0];
+
           if (lineToConnectWith.isFloor && connectDLinesWithFloor) {
             //println("lineToConnectWith.isFloor && connectDLinesWithFloor");
             return lineToConnectWith;
@@ -466,9 +479,19 @@ class LineManager implements Runnable {
         } else if (!lineToMove.isDeath) {
           //println("!lineToMove.isDeath");
 
-          boolean[] result = determineEvent(settings.chancesForNonDLinesToConnectWithFloors[0], settings.chancesForNonDLinesAndNonDLinesToConnect[0]);
-          boolean connectNonDLinesWithFloor = result[0];
-          boolean connectNonDLinesWithNonDLines = result[1];
+          boolean[] result =  new boolean[2];
+          boolean connectNonDLinesWithFloor = false;
+          boolean connectNonDLinesWithNonDLines = false;
+
+          if (settings.addFloors[0]) {
+
+            result = determineEvent(settings.chancesForNonDLinesToConnectWithFloors[0], settings.chancesForNonDLinesAndNonDLinesToConnect[0]);
+            connectNonDLinesWithNonDLines = result[1];
+          } else
+            connectNonDLinesWithNonDLines = settings.chancesForNonDLinesAndNonDLinesToConnect[0] > random(1);
+
+          connectNonDLinesWithFloor = result[0];
+
           if (lineToConnectWith.isFloor && connectNonDLinesWithFloor) {
             //println("lineToConnectWith.isFloor && connectNonDLinesWithFloor");
             return lineToConnectWith;
@@ -1304,6 +1327,15 @@ class LineManager implements Runnable {
       }
     }
     //println("in clearLines");
+  }
+
+  void clearFrames() {
+    for (int i = lines.size() - 1; i >= 0; i--) {
+      Line line = lines.get(i);
+      if (line.isFrame) {
+        lines.remove(i); // Safe removal by index
+      }
+    }
   }
 
   void setRandomValues() {

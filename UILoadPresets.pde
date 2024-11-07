@@ -20,6 +20,7 @@ class LoadPresetsPage {
   }
 
   void showUI() {
+    refreshFileList();
     itemLabels = getPresetsForImport();
     if (itemLabels != null && itemLabels.length != 0) {
       showFileList();
@@ -69,7 +70,7 @@ class LoadPresetsPage {
     if (index >= 0 && index < getPresetsForImport().length) {
       presetName[0] = getPresetsForImport()[index];
       println("Selected item: " + presetName[0]);
-      settings.importPreset(presetName[0]);
+      settings.importPreset(presetName[0], false);
       currentPreset = presetName[0];
       uiManager.updateCustomMapUIValues();
     } else {
@@ -110,7 +111,7 @@ class LoadPresetsPage {
 
   void deletePreset(String presetNameTemp) {
     String fileName = presetNameTemp + ".json";
-    String directoryPath = sketchPath(folderName);
+    String directoryPath = sketchPath(savedPresetsFolder);
     File fileToDelete = new File(directoryPath, fileName);
 
     if (fileToDelete.exists() && fileToDelete.delete()) {
@@ -165,7 +166,7 @@ class LoadPresetsPage {
   }
 
   String[] getPresetsForImport() {
-    File dir = new File(sketchPath(folderName));
+    File dir = new File(sketchPath(savedPresetsFolder));
     String[] jsonFiles = dir.list((d, name) -> name.endsWith(".json"));
 
     if (jsonFiles != null) {

@@ -29,11 +29,11 @@ class DefaultPresetsPage {
     presetGroupsButtons.add(addGroupBtn("2. Bouncy + non bouncy"));
     presetGroupsButtons.add(addGroupBtn("3. Death + non bouncy"));
     presetGroupsButtons.add(addGroupBtn("4. non bouncy"));
-    presetGroupsButtons.add(addGroupBtn("5. Death + Bouncy \n + non bouncy"));
+    presetGroupsButtons.add(addGroupBtn("5. Death + Bouncy + non bouncy"));
     presetGroupsButtons.add(addGroupBtn("6. Death + Grapple"));
     presetGroupsButtons.add(addGroupBtn("7. non bouncy + Grapple"));
     presetGroupsButtons.add(addGroupBtn("8. Frame + Floors"));
-    presetGroupsButtons.add(addGroupBtn("9 . Djumps"));
+    presetGroupsButtons.add(addGroupBtn("9. Djumps"));
   }
 
   void initializePresetPages() {
@@ -42,7 +42,7 @@ class DefaultPresetsPage {
 
     // Initialize multiple sub-pages with a loop or manually
     addSubPage(new String[]{
-      "1.1 random plats% 1.1% 20 - 60",
+      "0 90 bounce non boune death connect corner% 1.1% 20 - 60",
       "1.2 thin plats + small squares% 1.2% 30 - 100",
       "1.3 0° and 90°% 1.3% 30 - 80",
       "1.4 large squares% 1.4% 30 - 80",
@@ -104,46 +104,6 @@ class DefaultPresetsPage {
       .setFont(createFont("Tw Cen MT Bold", 15))
       .setText("PRESET SELECTION")
       .setVisible(false));
-
-    // Add Back Button
-    Button backBtn = cp5.addButton("backBtn")
-      .setPosition(420, 650)
-      .setSize(100, 30)
-      .setFont(defaultFont)
-      .setVisible(false)
-      .setLabel("Back")
-      .onClick(new CallbackListener() {
-      public void controlEvent(CallbackEvent e) {
-        cp5.getController("editPresetBtn").hide();
-        showPresetGroupsPage();
-      }
-    }
-    );
-    commonSubPageElements.add(backBtn);
-
-    // Add Edit Preset Button
-    Button editPresetBtn = cp5.addButton("editPresetBtn")
-      .setPosition(420, 610)
-      .setSize(100, 30)
-      .setFont(defaultFont)
-      .setLabel("Edit preset")
-      .setVisible(false)
-      .onClick(new CallbackListener() {
-      public void controlEvent(CallbackEvent e) {
-        for (ControllerInterface<?> ci : cp5.getAll()) {
-          if (ci instanceof Controller<?>) {
-            Controller<?> controller = (Controller<?>) ci;
-            if (controller.getId() == "uiElements".hashCode()) {
-              controller.hide();
-            }
-          }
-        }
-        cp5.getController("editPresetBtn").hide();
-        //showMainMenu();
-      }
-    }
-    );
-    commonSubPageElements.add(editPresetBtn);
   }
 
   void addSubPage(String[] buttonData) {
@@ -161,8 +121,8 @@ class DefaultPresetsPage {
 
         subPage.add(addPresetBtn(label, yPos, value, range));
         presetBtnIndex++;
-        if (presetBtnIndex % 2 != 0)
-          yPos += 60;
+        //if (presetBtnIndex % 2 != 0)
+        yPos += 40;
       }
     }
     subPages.add(subPage); // Add the fully populated sub-page to the main list
@@ -170,11 +130,11 @@ class DefaultPresetsPage {
 
   Button addPresetBtn(String label, float yPos, final float presetValue, String lineSuggestion) {
 
-    float xPos = getXPos(presetBtnIndex);
+    float xPos = getXPos(1);
 
     Button button = cp5.addButton("preset" + presetValue)
       .setPosition(xPos, yPos)
-      .setSize(200, 50)
+      .setSize(500, 25)
       .setFont(defaultFont)
       .setLabel(label)
       .setVisible(false)
@@ -182,8 +142,9 @@ class DefaultPresetsPage {
       .onClick(new CallbackListener() {
       public void controlEvent(CallbackEvent e) {
         handlePresetBtnClick(e.getController(), lineSuggestion);
-        currentPreset = "preset" + presetValue;
-        settings.applyPreset(currentPreset);
+        println("Selected item: " + label);
+        settings.importPreset(label, true);
+        currentPreset = label;
       }
     }
     );
@@ -209,7 +170,7 @@ class DefaultPresetsPage {
     float xPos = getXPos(groupBtnIndex);
     Button button = cp5.addButton("presetGroup" + index)
       .setPosition(xPos, yPos)
-      .setSize(200, 50)
+      .setSize(220, 25)
       .setFont(defaultFont)
       .setLabel(label)
       .onClick(new CallbackListener() {
@@ -228,11 +189,11 @@ class DefaultPresetsPage {
 
   void updateYPos() {
     if (groupBtnIndex % 2 != 0)
-      yPos += 60;
+      yPos += 40;
   }
 
   float getXPos(int groupBtnIndex) {
-    return groupBtnIndex % 2 == 0 ? 320 : 20;
+    return groupBtnIndex % 2 == 0 ? 300 : 20;
   }
 
   void openPresetGroup(int groupBtnIndex) {
@@ -259,6 +220,7 @@ class DefaultPresetsPage {
   }
 
   void hideAllPresetPages() {
+    removeAllPresetBtnHighlights();
     for (List<Controller> subPage : subPages) {
       for (Controller controller : subPage) {
         controller.hide();

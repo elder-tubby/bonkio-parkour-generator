@@ -640,11 +640,26 @@ class CustomMapPage {
 
       .setText(join(floatListToStringArray(valueList), ", "))
       .onChange((e) -> {
-      ArrayList<Float> newList = parseInputToFloatList(e.getController().getStringValue());
-      valueList.clear(); // Clear the original list
-      valueList.addAll(newList); // Add all values from newList
-      e.getController().setStringValue(join(floatListToStringArray(valueList), ", "));
-      updateLocks();
+      String input = e.getController().getStringValue();
+
+      // Check if input is valid
+      if (input.matches("^\\s*\\d+(\\.\\d+)?(\\s*,\\s*\\d+(\\.\\d+)?)*\\s*$")) {
+        ArrayList<Float> newList = parseInputToFloatList(input);
+        valueList.clear(); // Clear the original list
+        valueList.addAll(newList); // Add all values from newList
+
+        // Update the text field with the new valid input
+        String updatedText = join(floatListToStringArray(valueList), ", ");
+        e.getController().setStringValue(updatedText);
+      } else {
+        // Invalid input: revert to the last valid input
+        String revertedText = join(floatListToStringArray(valueList), ", ");
+        e.getController().setStringValue(revertedText);
+
+        // Optionally, provide feedback to the user
+        System.out.println("Invalid input, reverting to: " + revertedText);
+      }
+      updateLocks(); // Update dependent states
     }
     );
     textfield.getCaptionLabel().align(ControlP5.RIGHT_OUTSIDE, ControlP5.CENTER).setPaddingX(10);
@@ -654,6 +669,7 @@ class CustomMapPage {
     if (children != null) {
       children.add(name);
     }
+    //textfield.setInputFilter(ControlP5.FLOAT); // Restrict to valid float inputs
 
     return textfield;
   }
@@ -792,7 +808,8 @@ class CustomMapPage {
     boolean isLocked = false;
 
     setLockAndColor("frameWidth", !settings.addFrames[0]);
-    setLockAndColor("areFramesDeath", !settings.addFrames[0]);
+    setLockAndColor("areFramesDeath", !settings.addFrames[0]);  
+    
     setLockAndColor("areFramesBouncy", !settings.addFrames[0]);
 
     setLockAndColor("numOfFloors", !settings.addFloors[0]);
@@ -844,12 +861,18 @@ class CustomMapPage {
     setLockAndColor("minDistanceBtwNonDLinesAndFloors", !settings.addFloors[0] || settings.chancesOfDeath[0] >= 1);
     setLockAndColor("minDistanceBtwDLinesAndFloors", !settings.addFloors[0] || settings.chancesOfDeath[0] <= 0);
     setLockAndColor("minDistanceBtwNonDLinesAndFrames", !settings.addFrames[0] || settings.chancesOfDeath[0] >= 1);
+    setLockAndColor("minDistanceBtwDLinesAndFrames", !settings.addFrames[0] || settings.chancesOfDeath[0] <= 0);
+    setLockAndColor("minDistanceBtwFloorsAndFrames", !settings.addFrames[0] || !settings.addFloors[0] || settings.numOfFloors[0] == 0);
 
     setLockAndColor("sameColorForAllDLines", settings.chancesOfDeath[0] <= 0);
     setLockAndColor("sameColorForAllBLines", settings.chancesOfBounciness[0] <= 0);
     setLockAndColor("sameColorForAllGLines", settings.chancesOfGrapple[0] <= 0);
+    setLockAndColor("moveDLinesToBack", settings.moveDLinesToFront[0]);
+    setLockAndColor("moveDLinesToFront", settings.moveDLinesToBack[0]);
   }
   void showExportPopup() {
+
+    isExportTextfieldOpen = true;
 
     int xPos = 120;
     int yPos = 200;
@@ -918,6 +941,7 @@ class CustomMapPage {
   }
 
   void handleSavePresetAction() {
+    isExportTextfieldOpen = false;
     String presetName = presetNameField.getText();
     currentPreset = presetName;
     if (presetName.equals("")) presetName = "Unnamed Preset";
@@ -928,6 +952,7 @@ class CustomMapPage {
 
   // Hide popup menu
   void hideExportPopup() {
+    isExportTextfieldOpen = false;
     // Hide popup elements
     cp5.getController("popupBackground").hide();
     cp5.getController("popupTitle").hide();

@@ -54,7 +54,7 @@ class EditLinesManager {
       hideControllers(otherOptions);
       bgButton.hide();
       showControllers(lineProperties);
-      //updateSlidersAndToggles();
+      updateSlidersAndToggles();
     } else {
       hideControllers(lineProperties);
       showControllers(otherOptions);
@@ -125,7 +125,7 @@ class EditLinesManager {
       }
     }
     );
-    
+
 
     Textlabel lineDataCopiedLabel = cp5.addTextlabel("lineDataCopiedLabel")
       .setPosition(endOfWidth - 10 - 100, startYPos + 50) // Position below the button
@@ -293,7 +293,15 @@ class EditLinesManager {
   }
 
   void handleAddNewLineBtnClick() {
-    Line newLine = new Line((startOfWidth + endOfWidth) / 2, (startOfHeight + endOfHeight) / 2, 10, 10, 0, false);
+    float xPos = (startOfWidth + endOfWidth) / 2;
+    float yPos = (startOfHeight + endOfHeight) / 2;
+    // Check if the pointer is within the canvas
+    if (mouseX >= startOfWidth && mouseX <= endOfWidth &&
+      mouseY >= startOfHeight && mouseY <= endOfHeight) {
+      xPos = mouseX;
+      yPos = mouseY;
+    }
+    Line newLine = new Line(xPos, yPos, 10, 10, 0, false);
     lines.add(newLine);
     selectedLine = newLine;
     cp5.getController("lineDataCopiedLabel").hide();
@@ -314,21 +322,34 @@ class EditLinesManager {
   }
 
   void handleSpawnBtnClick() {
+
+    cp5.getController("lineDataCopiedLabel").hide();
+
     if (!isCirclePlaced) {
       // Place the circle at the mouse position
       circlePosition = new PVector(mouseX, mouseY);
-      circlePosition.set((startOfWidth + endOfWidth) / 2, (startOfHeight + endOfHeight) / 2 );
+      // Check if the pointer is not within the canvas
+      if (!(mouseX >= startOfWidth && mouseX <= endOfWidth &&
+        mouseY >= startOfHeight && mouseY <= endOfHeight)) {
+
+        circlePosition.set((startOfWidth + endOfWidth) / 2, (startOfHeight + endOfHeight) / 2 );
+      }
       isCirclePlaced = true;
     } else {
       // Relocate the circle to the new mouse position
-      circlePosition.set((startOfWidth + endOfWidth) / 2, (startOfHeight + endOfHeight) / 2 );
+      if (!(mouseX >= startOfWidth && mouseX <= endOfWidth &&
+        mouseY >= startOfHeight && mouseY <= endOfHeight)) {
+
+        circlePosition.set((startOfWidth + endOfWidth) / 2, (startOfHeight + endOfHeight) / 2 );
+      } else
+        circlePosition.set(mouseX, mouseY);
     }
   }
-  
+
   void handleCopyLineDataBtnClick() {
-      lineManager.moveLinesForwardOrBackward();
-      saveLineAttributes();
-    }
+    lineManager.moveLinesForwardOrBackward();
+    saveLineAttributes();
+  }
 
   boolean isMouseOverSlider() {
     boolean returnValue = false;

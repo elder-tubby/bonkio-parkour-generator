@@ -17,7 +17,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 //float minJumpHeight = 14.8; // Without using heavy. The bottom-most point of player's circle when they are at min height
 //float playerDiameter = 9;
 
-String folderName = "presets";
+String savedPresetsFolder = "saved-presets";
 
 CopyOnWriteArrayList<Line> lines = new CopyOnWriteArrayList<>();
 LineManager lineManager;
@@ -53,6 +53,7 @@ boolean isDraggingCircle = false; // Check if the circle is being dragged
 boolean isCirclePlaced = false; // Check if the circle has been placed
 PVector circlePosition; // Position of the circle
 float circleRadius; // Radius of the circle
+boolean isExportTextfieldOpen;
 
 ControlP5 cp5;
 
@@ -62,15 +63,11 @@ void setup() {
   size(1310, 710);
   cp5 = new ControlP5(this);
 
-  settings.importPreset("default");
-  currentPreset = "temp";
+  currentPreset = "temp"; // in case save presets is clicked before importing any preset
   generateBtnManager = new GenerateBtnManager();
   uiManager = new UIManager();
   editLinesManager = new EditLinesManager();
   lineManager = new LineManager();
-
-  setLockAndColor("defaultPresetsBtn", true); // also disabled its hotkey
-  setLockAndColor("addPhysicsLineDuplicates", true);
 }
 
 void generate() {
@@ -89,6 +86,9 @@ void draw() {
   drawColorIndicator();
   editLinesManager.updateEditLineUI();
   generateBtnManager.updateGenerateButtonsUI();
+
+  //setLockAndColor("defaultPresetsBtn", true); // also disabled its hotkey
+  setLockAndColor("addPhysicsLineDuplicates", true);
 }
 
 void drawSpawn() {
@@ -166,73 +166,61 @@ void mouseReleased() {
 
 void keyPressed() {
 
-  if (keyCode == RIGHT) {
-    noOfLines += 3; // Increment by 1
-    uiManager.updateNoOfLinesSlider();
-  }
-  // Check if the left arrow key is pressed
-  else if (keyCode == LEFT) {
-    noOfLines -= 3; // Decrement by 1
-    uiManager.updateNoOfLinesSlider();
-  }
+  if (isExportTextfieldOpen) return;
 
-  if (keyCode == CONTROL) {
-    isControlPressed = true; // Set flag if CONTROL is pressed
-  }
+  if (keyCode == CONTROL) isControlPressed = true;
+
   if (!isControlPressed) {
+  } else if (isControlPressed) {
+
     if (uiManager.activeTabIndex == 0) {
-      if (key == '1') {
-        uiManager.customMapPage.setActiveSubPage(1);
-      } else if (key == '2') {
-        uiManager.customMapPage.setActiveSubPage(2);
-      } else if (key == '3') {
-        uiManager.customMapPage.setActiveSubPage(3);
-      }
+      if (key == '1') uiManager.customMapPage.setActiveSubPage(1);
+      else if (key == '2') uiManager.customMapPage.setActiveSubPage(2);
+      else if (key == '3') uiManager.customMapPage.setActiveSubPage(3);
     }
-  } else {
-    // Check if '1' is pressed while CONTROL is held
-    if (key == '1') {
-      uiManager.selectTab(0);
-    } else if (key == '2') {
-      //uiManager.selectTab(1);
-    } else if (key == '3') {
-      uiManager.selectTab(2);
+    if (keyCode == TAB) {
+      if (uiManager.activeTabIndex == 0) uiManager.selectTab(1);
+      else if (uiManager.activeTabIndex == 1) uiManager.selectTab(2);
+      else if (uiManager.activeTabIndex == 2) uiManager.selectTab(0);
     }
   }
-  if (key == 'b') {
-    bgButton.handleBgButtonClick();
-  }
-  if (key == 'p') {
-    editLinesManager.handlePlatsColorBtnClick();
-  }
-  if (key == 's') {
-    editLinesManager.handleSpawnBtnClick();
+  if (key == 'b') bgButton.handleBgButtonClick();
+  if (key == 'p') editLinesManager.handlePlatsColorBtnClick();
+  if (key == 's') editLinesManager.handleSpawnBtnClick();
+
+  if (selectedLine == null) {
+
+    if (keyCode == RIGHT) noOfLines += 3; // Increment by 1
+    else if (keyCode == LEFT) noOfLines -= 3; // Decrement by 1
+    uiManager.updateNoOfLinesSlider();
+  } else if (selectedLine != null) {
+
+    if (!isControlPressed) {
+
+      if (keyCode == RIGHT) selectedLine.width += 2;
+      else if (keyCode == LEFT) selectedLine.width -= 2;
+      else if (  keyCode == UP) selectedLine.height += 2;
+      else if (keyCode == DOWN) selectedLine.height -= 2;
+    } else if (isControlPressed) {
+
+      if (keyCode == RIGHT) selectedLine.angle += 1;
+      else if (keyCode == LEFT) selectedLine.angle -= 1;
+    }
   }
 
   if (!isProcessingLines) {
-    if (key == 'g') {
-      generate();
-    } else if (key == 'f') {
-      generateBtnManager.handleGenerateFloorsClick();
-    } else if (key == 'l') {
-      generateBtnManager.handleGenerateLinesClick();
-    } else if (key == 'c') {
-      editLinesManager.handleCopyLineDataBtnClick();
-    }
+    if (key == 'g') generate();
+    else if (key == 'f') generateBtnManager.handleGenerateFloorsClick();
+    else if (key == 'l') generateBtnManager.handleGenerateLinesClick();
+    else if (key == 'c') editLinesManager.handleCopyLineDataBtnClick();
 
     if (selectedLine == null) {
-      if (key == 'a') {
-        editLinesManager.handleAddNewLineBtnClick();
-      }
-    } else {
-      if (key == 'd') {
-        editLinesManager.handleDeleteLineBtnClick();
-      }
+      if (key == 'a') editLinesManager.handleAddNewLineBtnClick();
+    } else if (selectedLine != null) {
+      if (key == 'd') editLinesManager.handleDeleteLineBtnClick();
     }
   } else {
-    if (key == 'c') {
-      isProcessingLines = false;
-    }
+    if (key == 'c') isProcessingLines = false;
   }
 }
 

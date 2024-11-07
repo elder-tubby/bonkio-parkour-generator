@@ -407,7 +407,7 @@ void setLockAndColor(String controllerName, boolean lockState) {
 float getSpawnSize() {
   float size = 0;
   int mapSize = (int) Math.floor(settings.mapSize[0]);
-  println("Map size " + mapSize);
+
   if (mapSize == 13) size = 5;
   else if (mapSize == 12) size = 6;
   else if (mapSize == 11) size = 7;

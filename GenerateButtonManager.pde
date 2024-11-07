@@ -239,16 +239,22 @@ class GenerateBtnManager {
 
   // Handle generating floors logic
   void handleGenerateFloorsClick() {
-    cp5.getController("lineDataCopiedLabel").hide();
+    if (!settings.addFrames[0]) lineManager.clearFrames();
     lineManager.clearFloorsAndLines();
-    lineManager.createFloorsAsync();
+    if (settings.addFloors[0]) {
+      cp5.getController("lineDataCopiedLabel").hide();
+      lineManager.createFloorsAsync();
+    }
   }
 
   // Handle generating lines logic
   void handleGenerateLinesClick() {
+    if (!settings.addFloors[0]) lineManager.clearFloorsAndLines();
+    else lineManager.clearLines();
+    if (!settings.addFrames[0]) lineManager.clearFrames();
+
     if (noOfLines > 0) {
       cp5.getController("lineDataCopiedLabel").hide();
-      lineManager.clearLines();
       lineManager.createLinesAsync();
     }
   }
