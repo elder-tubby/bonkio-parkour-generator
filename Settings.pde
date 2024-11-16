@@ -123,7 +123,7 @@ class Settings {
   List<Object> settingsElements;
 
   Settings() {
-    applyPreset("default");
+    applyDefaultPreset();
 
     settingsElements = getAllFields();
   }
@@ -348,103 +348,100 @@ class Settings {
     return null;
   }
 
-  void applyPreset(String presetName) {
+  void applyDefaultPreset() {
 
-    if (presetName.equals("default")) {
+    heightOfLine = new ArrayList<Float>(Arrays.asList(5f));
+    sameHeightForAllLines[0] = true;
+    minLineHeight[0] = 20; // If sameHeightForAllLines[0] == false, then a random value btw min and max is chosen,
+    maxLineHeight[0] = 100; // which is different for each line.
 
-      heightOfLine = new ArrayList<Float>(Arrays.asList(5f));
-      sameHeightForAllLines[0] = true;
-      minLineHeight[0] = 20; // If sameHeightForAllLines[0] == false, then a random value btw min and max is chosen,
-      maxLineHeight[0] = 100; // which is different for each line.
+    widthOfLine = new ArrayList<Float>(Arrays.asList(100f));
+    sameWidthForAllLines[0] = false;
+    minLineWidth[0] = 10;
+    maxLineWidth[0] = 300;
 
-      widthOfLine = new ArrayList<Float>(Arrays.asList(100f));
-      sameWidthForAllLines[0] = false;
-      minLineWidth[0] = 10;
-      maxLineWidth[0] = 300;
+    chancesOfDeath[0] = 0.5;
+    chancesOfBounciness[0] = 0.5;
+    globalBounciness = "null";
+    chancesOfGrapple[0] = 0;
+    chancesOfNoJump[0] = 0;
 
-      chancesOfDeath[0] = 0.5;
-      chancesOfBounciness[0] = 0.5;
-      globalBounciness = "null";
-      chancesOfGrapple[0] = 0;
-      chancesOfNoJump[0] = 0;
+    setSpecificLineAngles[0] = false;
+    nonDLineAngle = new ArrayList<Float>(Arrays.asList(0f));
+    dLineAngle = new ArrayList<Float>(Arrays.asList(0f));
+    lineAngleStart[0] = 0;
+    lineAngleEnd[0] = 360;
+    limitLineAngleAfterConnectingItsCorner[0] = true;
+    lineConnectAngleStart[0] = 90;
+    lineConnectAngleEnd[0] = 90;
 
-      setSpecificLineAngles[0] = false;
-      nonDLineAngle = new ArrayList<Float>(Arrays.asList(0f));
-      dLineAngle = new ArrayList<Float>(Arrays.asList(0f));
-      lineAngleStart[0] = 0;
-      lineAngleEnd[0] = 360;
-      limitLineAngleAfterConnectingItsCorner[0] = true;
-      lineConnectAngleStart[0] = 90;
-      lineConnectAngleEnd[0] = 90;
+    chancesForDLinesAndNonDLinesToConnect[0] = 0.1;
+    chancesForNonDLinesAndNonDLinesToConnect[0] = 0;
+    chancesForDLinesAndDLinesToConnect[0] = 0;
+    chancesForFloorsAndFloorsToConnect[0] = 0.9;
+    chancesForNonDLinesToConnectWithFloors[0] = 0.1;
+    chancesForDLinesToConnectWithFloors[0] = 0.1;
+    chancesForFloorsToConnectWithFrames[0] = 0.9;
 
-      chancesForDLinesAndNonDLinesToConnect[0] = 0.1;
-      chancesForNonDLinesAndNonDLinesToConnect[0] = 0;
-      chancesForDLinesAndDLinesToConnect[0] = 0;
-      chancesForFloorsAndFloorsToConnect[0] = 0.9;
-      chancesForNonDLinesToConnectWithFloors[0] = 0.1;
-      chancesForDLinesToConnectWithFloors[0] = 0.1;
-      chancesForFloorsToConnectWithFrames[0] = 0.9;
+    chancesForDLinesToConnectAtCorner[0] = 0;
+    chancesForNonDLinesToConnectAtCorner[0] = 0;
+    chancesForDLinesAndFloorsToConnectAtCorner[0] = 0;
+    chancesForNonDLinesAndFloorsToConnectAtCorner[0] = 0;
+    chancesForDLinesAndNonDLinesToConnectAtCorner[0] = 0;
+    chancesForFloorsToConnectAtCorner[0] = 0;
 
-      chancesForDLinesToConnectAtCorner[0] = 0;
-      chancesForNonDLinesToConnectAtCorner[0] = 0;
-      chancesForDLinesAndFloorsToConnectAtCorner[0] = 0;
-      chancesForNonDLinesAndFloorsToConnectAtCorner[0] = 0;
-      chancesForDLinesAndNonDLinesToConnectAtCorner[0] = 0;
-      chancesForFloorsToConnectAtCorner[0] = 0;
+    sameColorForAllNonDLines[0] = true;
+    sameColorForAllDLines[0] = true;
+    sameColorForAllBLines[0] = true;
+    sameColorForAllGLines[0] = true;
+    moveDLinesToBack[0] = true;
+    moveDLinesToFront[0] = false;
+    addNoPhysicsLineDuplicates[0] = false;
+    addBackground[0] = true;
 
-      sameColorForAllNonDLines[0] = true;
-      sameColorForAllDLines[0] = true;
-      sameColorForAllBLines[0] = true;
-      sameColorForAllGLines[0] = true;
-      moveDLinesToBack[0] = true;
-      moveDLinesToFront[0] = false;
-      addNoPhysicsLineDuplicates[0] = false;
-      addBackground[0] = true;
+    minDistanceBtwNonDLinesAndDLines[0] = 19;
+    minDistanceBtwNonDLines[0] = 19;
+    minDistanceBtwDLines[0] = 19;
+    minDistanceBtwFloors[0] = 30;
+    minDistanceBtwNonDLinesAndFloors[0] = 19;
+    minDistanceBtwDLinesAndFloors[0] = 19;
+    minDistanceBtwNonDLinesAndFrames[0] = 10;
+    minDistanceBtwDLinesAndFrames[0] = 10;
+    minDistanceBtwFloorsAndFrames[0] = 30;
+    canLinesOverlap[0] = false;
 
-      minDistanceBtwNonDLinesAndDLines[0] = 19;
-      minDistanceBtwNonDLines[0] = 19;
-      minDistanceBtwDLines[0] = 19;
-      minDistanceBtwFloors[0] = 30;
-      minDistanceBtwNonDLinesAndFloors[0] = 19;
-      minDistanceBtwDLinesAndFloors[0] = 19;
-      minDistanceBtwNonDLinesAndFrames[0] = 10;
-      minDistanceBtwDLinesAndFrames[0] = 10;
-      minDistanceBtwFloorsAndFrames[0] = 30;
-      canLinesOverlap[0] = false;
+    /* Randomly chooses one color scheme from the list of schemes in the array.
+     Leave empty for randomly choosing a scheme from all avalable schemes.*/
+    rndlyChooseOneSchemeForBg = new boolean[]{true};
 
-      /* Randomly chooses one color scheme from the list of schemes in the array.
-       Leave empty for randomly choosing a scheme from all avalable schemes.*/
-      rndlyChooseOneSchemeForBg = new boolean[]{true};
+    addFrames[0] = true;
+    frameWidth[0] = 10;
+    areFramesDeath[0] = false;
+    areFramesBouncy[0] = false;
 
-      addFrames[0] = true;
-      frameWidth[0] = 10;
-      areFramesDeath[0] = false;
-      areFramesBouncy[0] = false;
+    addFloors[0] = true;
+    numOfFloors[0] = 12;
+    minFloorWidth[0] = 100;
+    maxFloorWidth[0] = 700;
+    floorHeight[0] = 10;
+    areFloorsBouncy[0] = false;
 
-      addFloors[0] = true;
-      numOfFloors[0] = 12;
-      minFloorWidth[0] = 100;
-      maxFloorWidth[0] = 700;
-      floorHeight[0] = 10;
-      areFloorsBouncy[0] = false;
+    setSpecificFloorAngles[0] = false;
+    floorAngle = new ArrayList<Float>(Arrays.asList(0f));
+    floorAngleStart[0] = 0;
+    floorAngleEnd[0] = 360;
+    limitFloorAngleAfterConnect[0] = true;
+    floorConnectAngleStart[0] = 45;
+    floorConnectAngleEnd[0] = 135;
 
-      setSpecificFloorAngles[0] = false;
-      floorAngle = new ArrayList<Float>(Arrays.asList(0f));
-      floorAngleStart[0] = 0;
-      floorAngleEnd[0] = 360;
-      limitFloorAngleAfterConnect[0] = true;
-      floorConnectAngleStart[0] = 45;
-      floorConnectAngleEnd[0] = 135;
+    connectFloorUp[0] = false;
+    connectFloorDown[0] = true;
+    connectFloorLeft[0] = true;
+    connectFloorRight[0] = true;
 
-      connectFloorUp[0] = false;
-      connectFloorDown[0] = true;
-      connectFloorLeft[0] = true;
-      connectFloorRight[0] = true;
+    lineToMoveConnectPointStart[0] = 1;
+    lineToMoveConnectPointEnd[0] = 1;
 
-      lineToMoveConnectPointStart[0] = 1;
-      lineToMoveConnectPointEnd[0] = 1;
-
-      mapSize[0] = 9;
-    }
+    mapSize[0] = 9;
   }
 }

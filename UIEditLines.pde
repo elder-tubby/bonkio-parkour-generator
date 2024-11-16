@@ -176,17 +176,17 @@ class EditLinesManager {
 
     int yDistBtwSliders = 23;
 
-    widthSlider = addSlider("width", startOfWidth, (int) startYPos, 1, 1000, (e) -> {
+    widthSlider = addSlider("                                            width                          (CTRL + L/R)", startOfWidth, (int) startYPos, 1, 1000, (e) -> {
       if (selectedLine != null) selectedLine.width = e.getController().getValue();
     }
     );
 
-    heightSlider = addSlider("height", startOfWidth, (int) startYPos + yDistBtwSliders * 1, 1, 1000, (e) -> {
+    heightSlider = addSlider("                                            height                        (CTRL + U/D)", startOfWidth, (int) startYPos + yDistBtwSliders * 1, 1, 1000, (e) -> {
       if (selectedLine != null) selectedLine.height = e.getController().getValue();
     }
     );
 
-    angleSlider = addSlider("angle", startOfWidth, (int) startYPos + yDistBtwSliders * 2, 0, 360, (e) -> {
+    angleSlider = addSlider("                                            angle                        (SHIFT + L/R)", startOfWidth, (int) startYPos + yDistBtwSliders * 2, 0, 360, (e) -> {
       if (selectedLine != null) selectedLine.angle = e.getController().getValue();
     }
     );
@@ -194,27 +194,23 @@ class EditLinesManager {
     int xPos = (int) startXPos + 330;
 
 
-    toggleDeath = addToggle("toggleDeath", xPos, (int) startYPos, "death", (e) -> {
-      selectedLine.isDeath = e.getController().getValue() == 1;
-      if (selectedLine.isDeath) selectedLine.makeDeath();
-      else selectedLine.makeNonDeath();
+    toggleDeath = addToggle("toggleDeath", xPos, (int) startYPos, "death (d)", (e) -> {
+      boolean isDeath = e.getController().getValue() == 1;
+      handleDeathToggle(isDeath);
     }
     );
 
-    toggleBounce = addToggle("toggleBounce", xPos, (int) startYPos + yDistBtwSliders * 1, "bounce", (e) -> {
-      selectedLine.isBouncy = e.getController().getValue() == 1;
-      if (selectedLine.isBouncy) selectedLine.makeBouncy();
-      else selectedLine.makeNonBouncy();
+    toggleBounce = addToggle("toggleBounce", xPos, (int) startYPos + yDistBtwSliders * 1, "bounce (b)", (e) -> {
+      boolean isBouncy = e.getController().getValue() == 1;
+      handleBounceToggle(isBouncy);
     }
     );
 
-    toggleGrapple = addToggle("toggleGrapple", xPos, (int) startYPos + yDistBtwSliders * 2, "grapple", (e) -> {
-      selectedLine.hasGrapple = e.getController().getValue() == 1;
-      if (selectedLine.hasGrapple) selectedLine.makeGrapplable();
-      else selectedLine.makeNonGrapplable();
+    toggleGrapple = addToggle("toggleGrapple", xPos, (int) startYPos + yDistBtwSliders * 2, "grapple (g)", (e) -> {
+      boolean hasGrapple = e.getController().getValue() == 1;
+      handleGrappleToggle(hasGrapple);
     }
     );
-
     xPos = (int) startXPos + 60 + 50 + 330;
 
     toggleNoJump = addToggle("toggleNoJump", xPos, (int) startYPos + yDistBtwSliders * 0, "no-jump", (e) -> {
@@ -235,7 +231,7 @@ class EditLinesManager {
       .setPosition(xPos, startYPos + yDistBtwSliders * 2)
       .setSize(80, 20)
       .setFont(tabFont)
-      .setLabel("delete (d)")
+      .setLabel("delete (del)")
       //.setColorBackground(color(150))
       .setColorForeground(color(150, 0, 0))
       .setColorActive(color(255, 0, 0))
@@ -312,6 +308,40 @@ class EditLinesManager {
     lines.remove(selectedLine);
     selectedLine = null;
   }
+
+  void handleBounceToggle(boolean isBouncy) {
+    if (selectedLine != null) {
+      selectedLine.isBouncy = isBouncy;
+      if (selectedLine.isBouncy) {
+        selectedLine.makeBouncy();
+      } else {
+        selectedLine.makeNonBouncy();
+      }
+    }
+  }
+
+  void handleDeathToggle(boolean isDeath) {
+    if (selectedLine != null) {
+      selectedLine.isDeath = isDeath;
+      if (selectedLine.isDeath) {
+        selectedLine.makeDeath();
+      } else {
+        selectedLine.makeNonDeath();
+      }
+    }
+  }
+
+  void handleGrappleToggle(boolean hasGrapple) {
+    if (selectedLine != null) {
+      selectedLine.hasGrapple = hasGrapple;
+      if (selectedLine.hasGrapple) {
+        selectedLine.makeGrapplable();
+      } else {
+        selectedLine.makeNonGrapplable();
+      }
+    }
+  }
+    
   void handlePlatsColorBtnClick() {
     cp5.getController("lineDataCopiedLabel").hide();
     lineManager.setRandomValues();
@@ -319,6 +349,7 @@ class EditLinesManager {
       if (!line.noPhysics)
         line.setColors();
     }
+    if (settings.addNoPhysicsLineDuplicates[0]) lineManager.duplicateAndScaleDownLines(lines);
   }
 
   void handleSpawnBtnClick() {

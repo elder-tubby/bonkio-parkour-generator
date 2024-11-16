@@ -81,7 +81,7 @@ class LineManager implements Runnable {
         newLine.setAsFloor();
 
         if ((connectFloorToFloor[0] && existsFloorLine(lines)) || connectFloorToFrame[0]) {
-          connectCornerToAnExistingLine(newLine, settings.floorConnectAngleStart, settings.floorConnectAngleEnd);
+          connectCornerToAnExistingLine(newLine);
         }
 
         if (isTooCloseToOtherLines(newLine) || isLineOutOfFrame(newLine)) {
@@ -110,6 +110,7 @@ class LineManager implements Runnable {
       }
     }
     moveLinesForwardOrBackward();
+    if (settings.addNoPhysicsLineDuplicates[0]) duplicateAndScaleDownLines(lines);
     if (!settings.addFrames[0]) extendLinesAboveRoof(findLinesCrossingYEqualsZero(lines));
 
 
@@ -133,6 +134,8 @@ class LineManager implements Runnable {
     int numOfTimesLoopLimitReached = 0;
 
     println("Starting line generation...");
+
+
 
     for (int i = 0; i < noOfLines && isProcessingLines; ) {
       for (int j = 0; j < loopLimitForEachLine && isProcessingLines; j++) {
@@ -199,7 +202,7 @@ class LineManager implements Runnable {
 
     if (!isDeath && random(1) < settings.chancesOfNoJump[0]) newLine.setAsNoJump();
 
-    connectCornerToAnExistingLine(newLine, settings.lineConnectAngleStart, settings.lineConnectAngleEnd);
+    connectCornerToAnExistingLine(newLine);
     //println("isoutofframe: " + isLineOutOfFrame(newLine));
 
     if (!isTooCloseToOtherLines(newLine) && !isLineOutOfFrame(newLine)) {
@@ -388,7 +391,10 @@ class LineManager implements Runnable {
     return points.toArray(new PVector[0]);
   }
 
-  void connectCornerToAnExistingLine(Line lineToMove, float[] lineConnectAngleStart, float[] lineConnectAngleEnd) {
+  void connectCornerToAnExistingLine(Line lineToMove) {
+
+    float[] lineConnectAngleStart = settings.lineConnectAngleStart;
+    float[] lineConnectAngleEnd = settings.lineConnectAngleEnd;
 
     while (true) {
       //println("in connectCornerToAnExistingLine: " + ++counterForTrackingControl);
@@ -460,7 +466,7 @@ class LineManager implements Runnable {
           boolean connectDLinesWithFloor = false;
           boolean connectDLinesWithDLines = false;
 
-          if (settings.addFloors[0]) {
+          if (settings.addFloors[0] && settings.numOfFloors[0] > 0) {
             result = determineEvent(settings.chancesForDLinesToConnectWithFloors[0], settings.chancesForDLinesAndDLinesToConnect[0]);
             connectDLinesWithDLines = result[1];
           } else
@@ -483,7 +489,7 @@ class LineManager implements Runnable {
           boolean connectNonDLinesWithFloor = false;
           boolean connectNonDLinesWithNonDLines = false;
 
-          if (settings.addFloors[0]) {
+          if (settings.addFloors[0] && settings.numOfFloors[0] > 0) {
 
             result = determineEvent(settings.chancesForNonDLinesToConnectWithFloors[0], settings.chancesForNonDLinesAndNonDLinesToConnect[0]);
             connectNonDLinesWithNonDLines = result[1];
@@ -1035,6 +1041,9 @@ class LineManager implements Runnable {
   }
 
   void duplicateAndScaleDownLines(CopyOnWriteArrayList<Line> lines) {
+    // Create a map to track the relationship between physics lines and their duplicates
+
+    noPyhsicsDuplicatelineMap = new HashMap<>();
     CopyOnWriteArrayList<Line> duplicates = new CopyOnWriteArrayList<Line>();
 
     for (Line line : lines) {
@@ -1052,6 +1061,7 @@ class LineManager implements Runnable {
 
         // Add the duplicate to the list of duplicates
         duplicates.add(duplicate);
+        noPyhsicsDuplicatelineMap.put(line, duplicate);
       }
     }
 

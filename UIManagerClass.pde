@@ -87,7 +87,7 @@ class UIManager {
       .setPosition(20, 600)
       .setRange(0, 200)      // Set the range of the slider
       .setValue(noOfLines)    // Set the initial value
-      .setLabel("                                no. of lines                              <   >")
+        .setLabel("                                no. of lines                            L / R")
       .setSize(310, 30)
       .setDecimalPrecision(0)  // Set decimal precision to 0 to show integer values
       .setFont(defaultFont)

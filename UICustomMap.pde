@@ -808,8 +808,8 @@ class CustomMapPage {
     boolean isLocked = false;
 
     setLockAndColor("frameWidth", !settings.addFrames[0]);
-    setLockAndColor("areFramesDeath", !settings.addFrames[0]);  
-    
+    setLockAndColor("areFramesDeath", !settings.addFrames[0]);
+
     setLockAndColor("areFramesBouncy", !settings.addFrames[0]);
 
     setLockAndColor("numOfFloors", !settings.addFloors[0]);
@@ -819,6 +819,8 @@ class CustomMapPage {
 
     setLockAndColor("setSpecificFloorAngles", !settings.addFloors[0]);
     setLockAndColor("floorAngle", !settings.addFloors[0] || !settings.setSpecificFloorAngles[0]);
+    setLockAndColor("floorAngleStart", !settings.addFloors[0] || settings.setSpecificFloorAngles[0]);
+    setLockAndColor("floorAngleEnd", !settings.addFloors[0] || settings.setSpecificFloorAngles[0]);
     setLockAndColor("limitFloorAngleAfterConnect", !settings.addFloors[0]);
     ctrl = cp5.getController("limitFloorAngleAfterConnect");
     isLocked = cp5.getController("limitFloorAngleAfterConnect").isLock() || !settings.limitFloorAngleAfterConnect[0];
