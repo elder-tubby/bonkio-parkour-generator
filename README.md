@@ -4,4 +4,4 @@ To run this, you'll need the Processing IDE: https://processing.org/download.
 
 Also, install the tampermonkey script (look for .js file in repo).
 
-For comparison, most of the maps by 'eldertubby' on bonk.io are made using this.
+For comparison, maps by 'eldertubby' on bonk.io are made using this.
