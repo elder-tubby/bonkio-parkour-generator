@@ -162,8 +162,6 @@ class LineManager implements Runnable {
     if (settings.addNoPhysicsLineDuplicates[0]) duplicateAndScaleDownLines(lines);
     if (!settings.addFrames[0]) extendLinesAboveRoof(findLinesCrossingYEqualsZero(lines));
 
-    createFrameForProgram();
-
     isProcessingLines = false;
     println("Line generation complete.");
   }
@@ -1043,7 +1041,7 @@ class LineManager implements Runnable {
   void duplicateAndScaleDownLines(CopyOnWriteArrayList<Line> lines) {
     // Create a map to track the relationship between physics lines and their duplicates
 
-    noPyhsicsDuplicatelineMap = new HashMap<>();
+    noPyhsicsDuplicateLineMap = new HashMap<>();
     CopyOnWriteArrayList<Line> duplicates = new CopyOnWriteArrayList<Line>();
 
     for (Line line : lines) {
@@ -1061,7 +1059,7 @@ class LineManager implements Runnable {
 
         // Add the duplicate to the list of duplicates
         duplicates.add(duplicate);
-        noPyhsicsDuplicatelineMap.put(line, duplicate);
+        noPyhsicsDuplicateLineMap.put(line, duplicate);
       }
     }
 
@@ -1320,6 +1318,15 @@ class LineManager implements Runnable {
     return false;
   }
 
+  void clearAllLinesExceptProgramLines() {
+    for (int i = lines.size() - 1; i >= 0; i--) {
+      Line line = lines.get(i);
+      if (!line.isOnlyForProgram) {
+        lines.remove(i); // Safe removal by index
+      }
+    }
+  }
+
   void clearFloorsAndLines() {
     for (int i = lines.size() - 1; i >= 0; i--) {
       Line line = lines.get(i);
@@ -1349,6 +1356,7 @@ class LineManager implements Runnable {
   }
 
   void setRandomValues() {
+
     settings.deathColor = getRandomColor((int)random(numOfColorSchemesAvailable));
     settings.nonDeathColor = getRandomColor((int)random(numOfColorSchemesAvailable));
 
@@ -1423,6 +1431,6 @@ class LineManager implements Runnable {
     moveBouncyLinesToBack();
     moveDLinesToFrontOrBack();
     moveBgLinesToBack();
-    createFrameForProgram();
+    moveLinesForProgramToFront();
   }
 }

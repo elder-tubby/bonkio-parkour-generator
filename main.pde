@@ -23,10 +23,10 @@ CopyOnWriteArrayList<Line> lines = new CopyOnWriteArrayList<>();
 LineManager lineManager;
 UIManager uiManager;
 Settings settings = new Settings();
-BgButton bgButton;
+BgButtonManager bgButtonManager;
 EditLinesManager editLinesManager;
 GenerateBtnManager generateBtnManager;
-Map<Line, Line> noPyhsicsDuplicatelineMap;
+Map<Line, Line> noPyhsicsDuplicateLineMap;
 
 int numOfColorSchemesAvailable = 65;
 String currentPreset;
@@ -56,10 +56,10 @@ final int GREYED_OUT_COLOR = color(150, 150, 150);
 
 Line selectedLine = null;
 boolean dragging = false;
-boolean isDraggingCircle = false; // Check if the circle is being dragged
-boolean isCirclePlaced = false; // Check if the circle has been placed
-PVector circlePosition; // Position of the circle
-float circleRadius; // Radius of the circle
+boolean isDraggingSpawn = false; // Check if the circle is being dragged
+boolean isSpawnPlaced = false; // Check if the circle has been placed
+PVector spawnPosition; // Position of the circle
+float spawnRadius; // Radius of the circle
 boolean isExportTextfieldOpen;
 
 ControlP5 cp5;
@@ -100,17 +100,16 @@ void draw() {
 
 void drawSpawn() {
   //Draw the circle if it has been placed
-  if (isCirclePlaced) {
-    circleRadius = getSpawnSize();
+  if (isSpawnPlaced) {
+    spawnRadius = getSpawnSize();
     fill(255, 0, 0); // Circle color
     strokeWeight(1);
     stroke(0);
-    ellipse(circlePosition.x, circlePosition.y, circleRadius * 2, circleRadius * 2);
+    ellipse(spawnPosition.x, spawnPosition.y, spawnRadius * 2, spawnRadius * 2);
   }
 }
 
 void drawLinesFromList() {
-  //synchronized (lines) {
 
   for (Line line : lines) {
     if (line == selectedLine) {
@@ -118,178 +117,5 @@ void drawLinesFromList() {
     } else {
       line.drawLine(false);  // Draw normally
     }
-  }
-  //}
-}
-
-void mousePressed() {
-
-  if (editLinesManager.isMouseOverSlider()) {
-    return; // Skip line selection if over a slider
-  }
-
-  if (cp5.isMouseOver()) {
-    return; // Skip line selection if over a cp5 controller
-  }
-
-
-  if (isCirclePlaced && dist(mouseX, mouseY, circlePosition.x, circlePosition.y) <= circleRadius) {
-    isDraggingCircle = true; // Start dragging the circle
-    return;
-  }
-
-
-  for (Line line : lines) {
-    if (line.noPhysics == false && line.isMouseOver(mouseX, mouseY)) {
-      selectedLine = line;
-
-      dragging = true;
-      editLinesManager.updateSlidersAndToggles();
-      break;
-    }
-    if (line.noPhysics == true && line.isMouseOver(mouseX, mouseY)) {
-      selectedLine = null;
-    }
-  }
-}
-
-void mouseDragged() {
-  if (dragging && selectedLine != null) {
-    cp5.getController("lineDataCopiedLabel").hide();
-    selectedLine.centerX = mouseX;
-    selectedLine.centerY = mouseY;
-  }
-
-  if (settings.addNoPhysicsLineDuplicates[0]) {
-    // Retrieve the corresponding noPhysics line from the map
-    Line duplicate = noPyhsicsDuplicatelineMap.get(selectedLine);
-
-    // If a corresponding noPhysics line exists, update its position as well
-    if (duplicate != null) {
-      duplicate.centerX = mouseX;
-      duplicate.centerY = mouseY;
-    }
-  }
-  if (isDraggingCircle) {
-    cp5.getController("lineDataCopiedLabel").hide();
-    // Move the circle with the mouse
-    circlePosition.set(mouseX, mouseY);
-  }
-}
-
-void mouseReleased() {
-  isDraggingCircle = false; // Stop dragging the circle
-  dragging = false;
-}
-
-void keyPressed() {
-
-  if (isExportTextfieldOpen) return;
-
-  if (keyCode == CONTROL) isControlPressed = true;
-  if (keyCode == SHIFT) isShiftPressed = true;
-  if (keyCode == RIGHT) {
-    isRightPressed = true;
-  } else if (keyCode == LEFT) {
-    isLeftPressed = true;
-  } else if (keyCode == UP) {
-    isUpPressed = true;
-  } else if (keyCode == DOWN) {
-    isDownPressed = true;
-  }
-
-  if (!isControlPressed) {
-  } else if (isControlPressed) {
-
-    if (uiManager.activeTabIndex == 0) {
-      if (key == '1') uiManager.customMapPage.setActiveSubPage(1);
-      //else if (key == '2') uiManager.customMapPage.setActiveSubPage(2);
-      else if (key == '3') uiManager.customMapPage.setActiveSubPage(3);
-    }
-    if (keyCode == TAB) {
-      if (uiManager.activeTabIndex == 0) uiManager.selectTab(1);
-      else if (uiManager.activeTabIndex == 1) uiManager.selectTab(2);
-      else if (uiManager.activeTabIndex == 2) uiManager.selectTab(0);
-    }
-  }
-
-  if (key == 'p') editLinesManager.handlePlatsColorBtnClick();
-  if (key == 's') editLinesManager.handleSpawnBtnClick();
-
-  if (selectedLine == null) {
-    if (key == 'b') bgButton.handleBgButtonClick();
-
-    if (keyCode == RIGHT) noOfLines += 3; // Increment by 1
-    else if (keyCode == LEFT) noOfLines -= 3; // Decrement by 1
-    uiManager.updateNoOfLinesSlider();
-  } else if (selectedLine != null) {
-
-    if (!isControlPressed && !isShiftPressed) {
-
-      if (isRightPressed) selectedLine.centerX += 1;  // Move right by 1
-      if (isLeftPressed) selectedLine.centerX -= 1;  // Move left by 1
-      if (isUpPressed) selectedLine.centerY -= 1;  // Move up by 1
-      if (isDownPressed) selectedLine.centerY += 1;  // Move down by 1
-    } else if (isControlPressed) {
-
-      if (keyCode == RIGHT) selectedLine.width += 2;
-      else if (keyCode == LEFT) selectedLine.width -= 2;
-      else if (  keyCode == UP) selectedLine.height += 2;
-      else if (keyCode == DOWN) selectedLine.height -= 2;
-    } else if (isShiftPressed) {
-
-      if (keyCode == RIGHT) selectedLine.angle += 1;
-      else if (keyCode == LEFT) selectedLine.angle -= 1;
-    }
-  }
-
-  if (!isProcessingLines) {
-    if (key == 'f') generateBtnManager.handleGenerateFloorsClick();
-    else if (key == 'l') generateBtnManager.handleGenerateLinesClick();
-    else if (key == 'c') editLinesManager.handleCopyLineDataBtnClick();
-
-    if (selectedLine == null) {
-      if (key == 'g') generate();
-      if (key == 'a') editLinesManager.handleAddNewLineBtnClick();
-    } else if (selectedLine != null) {
-      if (key == 'b') {
-        boolean isBouncy = !selectedLine.isBouncy;  // Toggle between true/false
-        editLinesManager.handleBounceToggle(isBouncy);
-      }
-      if (key == 'd') {
-        boolean isDeath = !selectedLine.isDeath;  // Toggle between true/false
-        editLinesManager.handleDeathToggle(isDeath);
-      }
-
-      if (key == 'g') {
-        // Toggle the grapple state when 'g' is pressed
-        boolean hasGrapple = !selectedLine.hasGrapple;  // Toggle between true/false
-        editLinesManager.handleGrappleToggle(hasGrapple);
-      }
-
-      if (keyCode == DELETE) editLinesManager.handleDeleteLineBtnClick();
-    }
-  } else {
-    if (key == 'c') isProcessingLines = false;
-  }
-}
-
-void keyReleased() {
-  if (keyCode == CONTROL) {
-    isControlPressed = false; // Reset flag when CONTROL is released
-  }
-
-  if (keyCode == SHIFT) {
-    isShiftPressed = false;
-  }
-
-  if (keyCode == RIGHT) {
-    isRightPressed = false;
-  } else if (keyCode == LEFT) {
-    isLeftPressed = false;
-  } else if (keyCode == UP) {
-    isUpPressed = false;
-  } else if (keyCode == DOWN) {
-    isDownPressed = false;
   }
 }

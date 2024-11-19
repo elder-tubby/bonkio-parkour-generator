@@ -265,7 +265,7 @@ class GenerateBtnManager {
         Controller<?> controller = (Controller<?>) ci;
         String controllerName = controller.getName();
         if (controllerName.equals("generate") || controllerName.equals("copyLineData") ||
-          controllerName.equals("generateFloors") || controllerName.equals("generateLines")) {
+          controllerName.equals("generateFloors") || controllerName.equals("generateLines") || controllerName.equals("pasteLineData")) {
           if (isVisible) {
             controller.show();
           } else {

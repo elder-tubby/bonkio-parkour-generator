@@ -362,7 +362,7 @@ class Settings {
 
     chancesOfDeath[0] = 0.5;
     chancesOfBounciness[0] = 0.5;
-    globalBounciness = "null";
+    globalBounciness = null;
     chancesOfGrapple[0] = 0;
     chancesOfNoJump[0] = 0;
 

@@ -23,7 +23,7 @@ class EditLinesManager {
 
   EditLinesManager() {
     drawEditLineUI();
-    bgButton = new BgButton(startYPos);
+    bgButtonManager = new BgButtonManager(startYPos);
   }
 
   void updateEditLineUI() {
@@ -41,7 +41,7 @@ class EditLinesManager {
     generateBtnManager.setGenerateBtnsVisibility(false);
     hideControllers(lineProperties);
     hideControllers(otherOptions);
-    bgButton.hide();
+    bgButtonManager.hide();
   }
 
   void showNonProcessingLinesUI() {
@@ -52,13 +52,13 @@ class EditLinesManager {
 
     if (hasSelectedLine) {
       hideControllers(otherOptions);
-      bgButton.hide();
+      bgButtonManager.hide();
       showControllers(lineProperties);
       updateSlidersAndToggles();
     } else {
       hideControllers(lineProperties);
       showControllers(otherOptions);
-      bgButton.show();
+      bgButtonManager.show();
     }
   }
 
@@ -122,10 +122,23 @@ class EditLinesManager {
       .onClick(new CallbackListener() {
       public void controlEvent(CallbackEvent e) {
         handleCopyLineDataBtnClick();
+
       }
     }
     );
 
+    cp5.addButton("pasteLineData")
+      .setPosition(endOfWidth - 10 - 150, startOfHeight - 50)
+      .setSize(160, 30)
+      .setFont(tabFont)
+      .setLabel("Paste and create new map")
+      .onClick(new CallbackListener() {
+      public void controlEvent(CallbackEvent e) {
+        handlePasteLineDataBtnClick();
+
+      }
+    }
+    );
 
     Textlabel lineDataCopiedLabel = cp5.addTextlabel("lineDataCopiedLabel")
       .setPosition(endOfWidth - 10 - 100, startYPos + 50) // Position below the button
@@ -341,7 +354,7 @@ class EditLinesManager {
       }
     }
   }
-    
+
   void handlePlatsColorBtnClick() {
     cp5.getController("lineDataCopiedLabel").hide();
     lineManager.setRandomValues();
@@ -356,24 +369,24 @@ class EditLinesManager {
 
     cp5.getController("lineDataCopiedLabel").hide();
 
-    if (!isCirclePlaced) {
+    if (!isSpawnPlaced) {
       // Place the circle at the mouse position
-      circlePosition = new PVector(mouseX, mouseY);
+      spawnPosition = new PVector(mouseX, mouseY);
       // Check if the pointer is not within the canvas
       if (!(mouseX >= startOfWidth && mouseX <= endOfWidth &&
         mouseY >= startOfHeight && mouseY <= endOfHeight)) {
 
-        circlePosition.set((startOfWidth + endOfWidth) / 2, (startOfHeight + endOfHeight) / 2 );
+        spawnPosition.set((startOfWidth + endOfWidth) / 2, (startOfHeight + endOfHeight) / 2 );
       }
-      isCirclePlaced = true;
+      isSpawnPlaced = true;
     } else {
       // Relocate the circle to the new mouse position
       if (!(mouseX >= startOfWidth && mouseX <= endOfWidth &&
         mouseY >= startOfHeight && mouseY <= endOfHeight)) {
 
-        circlePosition.set((startOfWidth + endOfWidth) / 2, (startOfHeight + endOfHeight) / 2 );
+        spawnPosition.set((startOfWidth + endOfWidth) / 2, (startOfHeight + endOfHeight) / 2 );
       } else
-        circlePosition.set(mouseX, mouseY);
+        spawnPosition.set(mouseX, mouseY);
     }
   }
 

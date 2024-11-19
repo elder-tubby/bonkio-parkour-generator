@@ -1,4 +1,4 @@
-class BgButton {
+class BgButtonManager {
   Button activeBgButton;
   Button leftArrowButton, rightArrowButton;
   String activeBgPattern = "Pattern1";
@@ -12,7 +12,7 @@ class BgButton {
   float bgBtnXPos = startOfWidth + arrowBtnWidth + distBtwBgAndArrowBtns + 10;
   float bgBtnYPos;
 
-  BgButton(float yPos) {
+  BgButtonManager(float yPos) {
 
     bgBtnYPos = yPos + 35;
 
