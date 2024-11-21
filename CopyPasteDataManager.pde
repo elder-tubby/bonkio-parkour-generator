@@ -158,10 +158,10 @@ void handlePasteLineDataBtnClick() {
     Line newLine = new Line(x, y, width, height, angle, isDeath);
 
     // Step 6: Set additional attributes based on the JSON data
-    newLine.id = lineData.hasKey("id") ? lineData.getInt("id") : -1;  // Default value if "id" is missing
+    newLine.id = lineData.hasKey("id") && lineData.get("id") != null ? lineData.getInt("id") : -1;  // Default value if "id" is missing or null
 
-    if (lineData.hasKey("bounciness")) {
-      // Check if the bounciness is a string
+    // Handle "bounciness" key, check if it's null or absent
+    if (lineData.hasKey("bounciness") && lineData.get("bounciness") != null) {
       if (lineData.get("bounciness") instanceof String) {
         String bouncinessValue = lineData.getString("bounciness");
         // If it's literally "null", treat it as null
@@ -173,25 +173,46 @@ void handlePasteLineDataBtnClick() {
         newLine.bounciness = null; // Handle other cases or if the field is not a recognized type
       }
     } else {
-      newLine.bounciness = null; // Default value if "bounciness" doesn't exist
+      newLine.bounciness = null; // Default value if "bounciness" is null or missing
     }
 
+    // Handle "friction", default to 0.0f if null or missing
+    newLine.friction = lineData.hasKey("friction") && lineData.get("friction") != null
+      ? lineData.getFloat("friction") : 0.0f;
 
-    newLine.friction = lineData.hasKey("friction") ? lineData.getFloat("friction") : 0.0f;  // Default value if "friction" is missing
-    newLine.isBgLine = lineData.hasKey("isBgLine") ? lineData.getBoolean("isBgLine") : false;
-    newLine.noPhysics = lineData.hasKey("noPhysics") ? lineData.getBoolean("noPhysics") : false;
-    newLine.hasGrapple = lineData.hasKey("noGrapple") ? !lineData.getBoolean("noGrapple") : true;  // Default to true if "noGrapple" is missing
-    newLine.isCapzone = lineData.hasKey("isCapzone") ? lineData.getBoolean("isCapzone") : false;
-    newLine.isNoJump = lineData.hasKey("isNoJump") ? lineData.getBoolean("isNoJump") : false;
-    newLine.isFrame = lineData.hasKey("isFrame") ? lineData.getBoolean("isFrame") : false;
-    newLine.isFloor = lineData.hasKey("isFloor") ? lineData.getBoolean("isFloor") : false;
-    newLine.isBouncy = lineData.hasKey("isBouncy")
+    // Handle boolean flags with default values if null
+    newLine.isBgLine = lineData.hasKey("isBgLine") && lineData.get("isBgLine") != null
+      ? lineData.getBoolean("isBgLine") : false;
+
+    newLine.noPhysics = lineData.hasKey("noPhysics") && lineData.get("noPhysics") != null
+      ? lineData.getBoolean("noPhysics") : false;
+
+    newLine.hasGrapple = lineData.hasKey("noGrapple") && lineData.get("noGrapple") != null
+      ? !lineData.getBoolean("noGrapple") : true;  // Default to true if "noGrapple" is missing or null
+
+    newLine.isCapzone = lineData.hasKey("isCapzone") && lineData.get("isCapzone") != null
+      ? lineData.getBoolean("isCapzone") : false;
+
+    newLine.isNoJump = lineData.hasKey("isNoJump") && lineData.get("isNoJump") != null
+      ? lineData.getBoolean("isNoJump") : false;
+
+    newLine.isFrame = lineData.hasKey("isFrame") && lineData.get("isFrame") != null
+      ? lineData.getBoolean("isFrame") : false;
+
+    newLine.isFloor = lineData.hasKey("isFloor") && lineData.get("isFloor") != null
+      ? lineData.getBoolean("isFloor") : false;
+
+    newLine.isBouncy = lineData.hasKey("isBouncy") && lineData.get("isBouncy") != null
       ? lineData.getBoolean("isBouncy")
-      : (newLine.bounciness.equals("null")
-      ? true : false);
-    newLine.isOnlyForProgram = lineData.hasKey("isOnlyForProgram") ? lineData.getBoolean("isOnlyForProgram") : false;
+      : (newLine.bounciness != null && newLine.bounciness.equals("null") ? true : false);
 
-    int colorValue = lineData.hasKey("color") ? lineData.getInt("color") : color(255, 255, 255);  // Default to white if "color" is missing
+    newLine.isOnlyForProgram = lineData.hasKey("isOnlyForProgram") && lineData.get("isOnlyForProgram") != null
+      ? lineData.getBoolean("isOnlyForProgram") : false;
+
+    // Handle "color", default to white if null or missing
+    int colorValue = lineData.hasKey("color") && lineData.get("color") != null
+      ? lineData.getInt("color") : color(255, 255, 255);  // Default to white if "color" is missing or null
+
     newLine.lineColor = decimalToRgb(colorValue);
 
     ArrayList<Line> tempLines = new ArrayList<Line>();
