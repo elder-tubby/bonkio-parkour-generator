@@ -136,8 +136,15 @@ class LineManager implements Runnable {
     println("Starting line generation...");
 
 
+    int i = 0;
 
-    for (int i = 0; i < noOfLines && isProcessingLines; ) {
+    if (!clearExistingLines) {
+      i = countNonFloorAndNonFrameLines();
+      println("countNonFloorAndNonFrameLines = " + countNonFloorAndNonFrameLines());
+    }
+    for (i = i; i < noOfLines && isProcessingLines; ) {
+
+      println("i in loop: " + i);
       for (int j = 0; j < loopLimitForEachLine && isProcessingLines; j++) {
         generateBtnManager.updateStatus(i, noOfLines, j, loopLimitForEachLine, numOfTimesLoopLimitReached, false);
 
@@ -151,8 +158,9 @@ class LineManager implements Runnable {
           numOfTimesLoopLimitReached++;
           //synchronized (lines) {
           size = lines.size();
-          if (i > 0 && size > 0)
-            lines.subList(size - i, size).clear();
+          println ("line size in loop: " + size);
+          if (i > 0 && size > 0) clearLines();
+            //lines.subList(size - i, size).clear();
           i = 0;
           //}
         }
@@ -1328,13 +1336,20 @@ class LineManager implements Runnable {
   }
 
   void clearFloorsAndLines() {
+    clearFloors();
+    clearLines();
+  }
+
+
+  void clearFloors() {
     for (int i = lines.size() - 1; i >= 0; i--) {
       Line line = lines.get(i);
-      if (!line.isBgLine && !line.isFrame && !line.isOnlyForProgram) {
+      if (line.isFloor) {
         lines.remove(i); // Safe removal by index
       }
     }
   }
+
 
   void clearLines() {
     for (int i = lines.size() - 1; i >= 0; i--) {
@@ -1343,7 +1358,6 @@ class LineManager implements Runnable {
         lines.remove(i); // Safe removal by index
       }
     }
-    //println("in clearLines");
   }
 
   void clearFrames() {
@@ -1353,6 +1367,18 @@ class LineManager implements Runnable {
         lines.remove(i); // Safe removal by index
       }
     }
+  }
+
+  int countNonFloorAndNonFrameLines() {
+    int count = 0;
+
+    for (int i = lines.size() - 1; i >= 0; i--) {
+      Line line = lines.get(i);
+      if (!line.isBgLine && !line.isFrame && !line.isOnlyForProgram && !line.isFloor) {
+        count++;
+      }
+    }
+    return count;
   }
 
   void setRandomValues() {

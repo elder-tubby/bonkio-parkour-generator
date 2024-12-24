@@ -34,11 +34,26 @@ class GenerateBtnManager {
   Textlabel statusLabel;
 
   GenerateBtnManager() {
+   
+    createClearLinesToggle();
     setupGenerateButtons();
     createBoundingBox();
     setupStatusLabel();
   }
+  void createClearLinesToggle() {
 
+    Toggle toggle = cp5.addToggle("clearExistingLinesToggle")
+      .setPosition(GENERATE_BTN_X_POS + 320, BTN_Y_POS)
+      .setValue(clearExistingLines)
+      .setLabel("")
+      .setFont(defaultFont)
+      .setSize(30, 30)
+      .onChange((e) -> {
+      clearExistingLines = !clearExistingLines;
+    }
+    );
+    toggle.getCaptionLabel().align(ControlP5.RIGHT_OUTSIDE, ControlP5.CENTER).setPaddingX(10);
+  }
   void setupStatusLabel() {
     generatingLineLabel = cp5.addTextlabel("generatingLineLabel")
       .setPosition(LABEL_X_POSITION, INITIAL_Y_POSITION)
@@ -249,9 +264,13 @@ class GenerateBtnManager {
 
   // Handle generating lines logic
   void handleGenerateLinesClick() {
-    if (!settings.addFloors[0]) lineManager.clearFloorsAndLines();
-    else lineManager.clearLines();
-    if (!settings.addFrames[0]) lineManager.clearFrames();
+
+    if (!settings.addFloors[0])
+      lineManager.clearFloors();
+    if (clearExistingLines)
+      lineManager.clearLines();
+    if (!settings.addFrames[0])
+      lineManager.clearFrames();
 
     if (noOfLines > 0) {
       cp5.getController("lineDataCopiedLabel").hide();

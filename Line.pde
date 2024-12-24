@@ -255,6 +255,7 @@ class Line {
     isNoJump = false;
     isDeathOgValue = true;
     isBouncy = false;
+    isDeath = true;
     if (!hasGrapple)
       lineColor = settings.deathColor;
   }

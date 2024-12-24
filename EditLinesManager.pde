@@ -15,6 +15,7 @@ class EditLinesManager {
   Button changeColorsBtn;
   Button addNewLineBtn;
   Button spawnBtn;
+  Button exchangeBAndDLinesBtn;
 
   float startXPos = startOfWidth + 10;
   float startYPos = 615;
@@ -122,7 +123,6 @@ class EditLinesManager {
       .onClick(new CallbackListener() {
       public void controlEvent(CallbackEvent e) {
         handleCopyLineDataBtnClick();
-
       }
     }
     );
@@ -135,7 +135,6 @@ class EditLinesManager {
       .onClick(new CallbackListener() {
       public void controlEvent(CallbackEvent e) {
         handlePasteLineDataBtnClick();
-
       }
     }
     );
@@ -172,6 +171,22 @@ class EditLinesManager {
     );
 
     otherOptions.add(addNewLineBtn);
+
+    exchangeBAndDLinesBtn   = cp5.addButton("exchangeBAndDLinesBtn")
+      .setPosition(startXPos + 220, startYPos + 35)
+      .setSize(100, 30)
+      .setFont(tabFont)
+      .setLabel("exchange\nB And D Lines")
+      .onClick(new CallbackListener() {
+      public void controlEvent(CallbackEvent e) {
+        exchangeBAndDLines();
+      }
+    }
+    );
+
+
+
+    otherOptions.add(exchangeBAndDLinesBtn);
 
     spawnBtn = cp5.addButton("spawnBtn")
       .setPosition(startXPos + 220, startYPos)
@@ -410,5 +425,22 @@ class EditLinesManager {
       angle += 360;
     }
     return angle;
+  }
+
+  void exchangeBAndDLines() {
+    // Iterate through the lines list to find all lines that are death
+    for (int i = 0; i < lines.size(); i++) {
+      Line line = lines.get(i);
+
+      if (line.noPhysics) continue;
+
+      if (line.isDeath) {
+        // Set the death line to be bouncy
+        line.makeBouncy();
+      } else if (line.isBouncy) {
+        // Set the bouncy line to be death
+        line.makeDeath();
+      }
+    }
   }
 }

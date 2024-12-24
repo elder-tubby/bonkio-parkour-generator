@@ -31,6 +31,7 @@ Map<Line, Line> noPyhsicsDuplicateLineMap;
 int numOfColorSchemesAvailable = 65;
 String currentPreset;
 int noOfLines = 0;
+boolean clearExistingLines = true;
 
 boolean isProcessingLines = false;
 boolean isControlPressed = false;
