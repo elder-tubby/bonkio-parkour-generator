@@ -1,5 +1,6 @@
 windows-amd64/
 .vscode/tasks.json
+out
 out/UIManagerClass.class
 out/UIManagerClass$BgButtonManager.class
 out/UIManagerClass$BgButtonManager$1.class
