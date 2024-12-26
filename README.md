@@ -1,7 +1,20 @@
 **Unfinished and not fully tested by others**
 
-To run this, you'll need the Processing IDE: https://processing.org/download.
+To generate parkour maps on bonk.io, you'll need to
 
-Also, install the tampermonkey script (look for .js file in repo).
+1. Generate map data.
+2. Convert map data to bonk.io maps.
+
+# 1. Generate map data
+
+This is done using the parkour generator app. To use the app, you can either
+
+- Download the .exe file
+- Or execute the source code using the [Processing IDE](https://processing.org/download).
+
+# 2. Convert map data to bonk.io maps.
+
+1. Install this [browser script](https://github.com/elder-tubby/parkour-gen-browser-script/blob/main/mini-script.js) on a script manager like tampermonkey.
+2. Paste the map data you copied in the parkour generator app.
 
 For comparison, maps by 'eldertubby' on bonk.io are made using this.
