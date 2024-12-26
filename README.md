@@ -3,7 +3,7 @@
 To generate parkour maps on bonk.io, you'll need to
 
 1. Generate map data.
-2. Convert map data to bonk.io maps.
+2. Convert that map data to bonk.io maps.
 
 ### 1. Generate map data
 
