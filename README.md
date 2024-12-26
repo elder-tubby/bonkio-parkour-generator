@@ -1,4 +1,4 @@
-**Note: Not fully tested by others. You can contact me on Discord @eldertubby
+**Note:** Not fully tested by others. You can contact me on Discord @eldertubby
 
 To generate parkour maps on bonk.io, you'll need to
 
