@@ -34,26 +34,12 @@ class GenerateBtnManager {
   Textlabel statusLabel;
 
   GenerateBtnManager() {
-   
-    createClearLinesToggle();
     setupGenerateButtons();
     createBoundingBox();
     setupStatusLabel();
   }
-  void createClearLinesToggle() {
 
-    Toggle toggle = cp5.addToggle("clearExistingLinesToggle")
-      .setPosition(GENERATE_BTN_X_POS + 320, BTN_Y_POS)
-      .setValue(clearExistingLines)
-      .setLabel("")
-      .setFont(defaultFont)
-      .setSize(30, 30)
-      .onChange((e) -> {
-      clearExistingLines = !clearExistingLines;
-    }
-    );
-    toggle.getCaptionLabel().align(ControlP5.RIGHT_OUTSIDE, ControlP5.CENTER).setPaddingX(10);
-  }
+
   void setupStatusLabel() {
     generatingLineLabel = cp5.addTextlabel("generatingLineLabel")
       .setPosition(LABEL_X_POSITION, INITIAL_Y_POSITION)
@@ -94,17 +80,28 @@ class GenerateBtnManager {
 
 
 
-  void updateStatus(int i, int noOfLines, int j, int loopLimitForEachLine, int numOfTimesLoopLimitReached, boolean isTextForFloors) {
-    generatingLineValueLabel.setText((i + 1) + "/" + noOfLines);
-    attemptToGenerateValueLabel.setText(j + "/" + loopLimitForEachLine);
-    attemptLimitReachedValueLabel.setText(String.valueOf(numOfTimesLoopLimitReached));
+  void updateStatus(int i, int noOfLines, int j, int loopLimitForEachLine, int numOfTimesLoopLimitReached, String isTextForFloors) {
+    if (isTextForFloors == "path") {
+      generatingLineValueLabel.setText((i + 1) + "/" + noOfLines);
+      attemptToGenerateLabel.setText("");
+      attemptToGenerateValueLabel.setText("");
+      attemptLimitReachedLabel.setText("");
+      attemptLimitReachedValueLabel.setText("");
+    } else {
 
-    if (isTextForFloors) {
+      generatingLineValueLabel.setText((i + 1) + "/" + noOfLines);
+      attemptToGenerateValueLabel.setText(j + "/" + loopLimitForEachLine);
+      attemptLimitReachedValueLabel.setText(String.valueOf(numOfTimesLoopLimitReached));
+    }
+
+    if (isTextForFloors == "floor") {
       generatingLineLabel.setText("GENERATING FLOOR:");
       attemptToGenerateLabel.setText("ATTEMPT TO GENERATE CURRENT FLOOR:");
-    } else {
+    } else if (isTextForFloors == "line") {
       generatingLineLabel.setText("GENERATING LINE:");
       attemptToGenerateLabel.setText("ATTEMPT TO GENERATE CURRENT LINE:");
+    } else if (isTextForFloors == "path") {
+      generatingLineLabel.setText("PROCESSING PATH POINT:");
     }
   }
 
@@ -277,6 +274,7 @@ class GenerateBtnManager {
       lineManager.createLinesAsync();
     }
   }
+
 
   void setGenerateBtnsVisibility(boolean isVisible) {
     for (ControllerInterface<?> ci : cp5.getAll()) {

@@ -47,8 +47,8 @@ class Settings {
   float[] lineConnectAngleStart = new float[1];
   float[] lineConnectAngleEnd = new float[1];
 
-  boolean[] moveDLinesToBack = new boolean[1];
-  boolean[] moveDLinesToFront = new boolean[1];
+  boolean[] areDLinesAtBack = new boolean[1];
+  boolean[] areBLinesAtBack = new boolean[1];
 
   boolean[] addNoPhysicsLineDuplicates = new boolean[1];
   boolean[] addBackground = new boolean[1];
@@ -59,6 +59,8 @@ class Settings {
 
   boolean[] addFrames = new boolean[1];
   float[] frameWidth = new float[1];
+  float[] frameAngleStart = new float[1];
+  float[] frameAngleEnd = new float[1];
   float[] minDistanceBtwNonDLinesAndFrames = new float[1];
 
   boolean[] addFloors = new boolean[1];
@@ -92,8 +94,8 @@ class Settings {
   float[] floorConnectAngleStart = new float[1];
   float[] floorConnectAngleEnd = new float[1];
 
-  float[] chancesForDLinesAndDLinesToConnect = new float[1];
-  float[] chancesForNonDLinesAndNonDLinesToConnect = new float[1];
+  float[] chancesForDLinesToConnect = new float[1];
+  float[] chancesForNonDLinesToConnect = new float[1];
   float[] minDistanceBtwNonDLinesAndDLines = new float[1];
 
   float[] chancesForDLinesToConnectAtCorner = new float[1];
@@ -117,6 +119,8 @@ class Settings {
   float[] lineToMoveConnectPointEnd = new float[1];
 
   float[] mapSize = new float[1];
+
+  float[] pathTightness = new float[1];
 
   // The following aren't preset properties:
   JSONObject presetExportData;
@@ -376,8 +380,8 @@ class Settings {
     lineConnectAngleEnd[0] = 90;
 
     chancesForDLinesAndNonDLinesToConnect[0] = 0.1;
-    chancesForNonDLinesAndNonDLinesToConnect[0] = 0;
-    chancesForDLinesAndDLinesToConnect[0] = 0;
+    chancesForNonDLinesToConnect[0] = 0;
+    chancesForDLinesToConnect[0] = 0;
     chancesForFloorsAndFloorsToConnect[0] = 0.9;
     chancesForNonDLinesToConnectWithFloors[0] = 0.1;
     chancesForDLinesToConnectWithFloors[0] = 0.1;
@@ -394,8 +398,8 @@ class Settings {
     sameColorForAllDLines[0] = true;
     sameColorForAllBLines[0] = true;
     sameColorForAllGLines[0] = true;
-    moveDLinesToBack[0] = true;
-    moveDLinesToFront[0] = false;
+    areDLinesAtBack[0] = true;
+    areBLinesAtBack[0] = true;
     addNoPhysicsLineDuplicates[0] = false;
     addBackground[0] = true;
 
@@ -418,6 +422,8 @@ class Settings {
     frameWidth[0] = 10;
     areFramesDeath[0] = false;
     areFramesBouncy[0] = false;
+    frameAngleStart[0] = 0;
+    frameAngleEnd[0] = 0;
 
     addFloors[0] = true;
     numOfFloors[0] = 12;
@@ -443,5 +449,6 @@ class Settings {
     lineToMoveConnectPointEnd[0] = 1;
 
     mapSize[0] = 9;
+    pathTightness[0] = 20;
   }
 }

@@ -1,8 +1,8 @@
 class UIManager {
 
   CustomMapPage customMapPage;
-  DefaultPresetsPage defaultPresetsPage;
   LoadPresetsPage loadPresetsPage;
+  MoreOptionsPage moreOptionsPage;
   List<Tab> tabs = new ArrayList<>();
 
   Slider noOfLinesSlider;
@@ -12,8 +12,8 @@ class UIManager {
   UIManager() {
 
     customMapPage = new CustomMapPage();
-    defaultPresetsPage = new DefaultPresetsPage();
     loadPresetsPage = new LoadPresetsPage();
+    moreOptionsPage = new MoreOptionsPage();
 
     setupCommonUI();
 
@@ -28,8 +28,8 @@ class UIManager {
 
   void setupTabs() {
 
-    String[] tabNames = {"customMapBtn", "defaultPresetsBtn", "importPresetsBtn"};
-    String[] tabLabels = {"Custom Map", "Default Presets", "Load Presets"};
+    String[] tabNames = {"customMapBtn", "importPresetsBtn", "moreOptionsBtn"};
+    String[] tabLabels = {"Custom Map", "Load Presets", "More Options"};
 
     for (int i = 0; i < tabNames.length; i++) {
       tabs.add(new Tab(tabNames[i], tabLabels[i], i, getControllersForTab(i), this));
@@ -46,14 +46,12 @@ class UIManager {
     if (activeTabIndex == 0) {
       customMapPage.hideAllSubPages();
     } else if (activeTabIndex == 1) {
-      defaultPresetsPage.hideAllPresetPages();
-    } else if (activeTabIndex == 2) {
       loadPresetsPage.hideUI();
     }
     activeTabIndex = tabIndex;
 
-    if (activeTabIndex == 2) {
-      tabs.get(activeTabIndex).tabButton.setColorBackground(color(0, 116, 217)); // Highlight the active tab
+    if (activeTabIndex == 1) {
+
       loadPresetsPage.showUI();
     } else {
       tabs.get(activeTabIndex).select();
@@ -67,8 +65,8 @@ class UIManager {
   List<Controller> getControllersForTab(int index) {
     // Logic to retrieve the controllers for each tab
     if (index == 0) return customMapPage.initialize();
-    if (index == 1) return defaultPresetsPage.initialize();
-    if (index == 2) return loadPresetsPage.initialize();
+    if (index == 1) return loadPresetsPage.initialize();
+    if (index == 2) return moreOptionsPage.initialize();
 
     return new ArrayList<>();
   }
@@ -79,7 +77,7 @@ class UIManager {
 
   void updateLoadPresetsUI() {
     loadPresetsPage.initialize();
-    tabs.get(2).deselect();
+    tabs.get(1).deselect();
   }
 
   void setupNoOfLinesSlider() {

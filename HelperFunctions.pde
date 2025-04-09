@@ -16,202 +16,252 @@ color getRandomColor(int scheme) {
   color lineColor;
 
   switch (scheme) {
-  case 0:
-    lineColor = color(random(0, 50), random(50, 150), random(100, 200)); // Dark greens and blues
+  case 0:  // Deep Blues and Greens
+    lineColor = color(random(0, 50), random(50, 150), random(100, 200));
     break;
-  case 1:
-    lineColor = color(random(50, 150), random(0, 50), random(100, 200)); // Dark purples and magentas
+  case 1:  // Rich Purples and Magentas
+    lineColor = color(random(80, 160), random(0, 80), random(100, 200));
     break;
-  case 2:
-    lineColor = color(random(0, 100), random(100, 255), random(100, 255)); // Cool tones
+  case 2:  // Cool Aqua & Teals
+    lineColor = color(random(0, 100), random(150, 255), random(150, 255));
     break;
-  case 3:
-    lineColor = color(random(100, 180), random(20, 80), random(20, 60)); // Dark reds and browns
+  case 3:  // Earthy Reds and Browns
+    lineColor = color(random(100, 180), random(40, 100), random(20, 80));
     break;
-  case 4:
-    lineColor = color(random(0, 60), random(100, 200), random(100, 255)); // Deep teal and aqua
+  case 4:  // Vivid Yellows and Golds
+    lineColor = color(random(200, 255), random(150, 220), random(0, 60));
     break;
-  case 5:
-    lineColor = color(random(0, 50), random(50, 100), random(150, 255)); // Midnight blues
+  case 5:  // Fiery Reds and Oranges
+    lineColor = color(random(200, 255), random(50, 150), random(0, 50));
     break;
-  case 6:
-    lineColor = color(random(0, 30), random(30, 100), random(50, 150)); // Charcoal tones
+  case 6:  // Neon Greens
+    lineColor = color(random(150, 255), random(200, 255), random(0, 100));
     break;
-  case 7:
-    lineColor = color(random(50, 100), random(20, 60), random(20, 60)); // Muted olive greens
+  case 7:  // Soft Pastels
+    lineColor = color(random(150, 255), random(150, 255), random(150, 255));
     break;
-  case 8:
-    lineColor = color(random(30, 80), random(20, 50), random(70, 150)); // Dusky purples
+  case 8:  // Muted Earth Tones
+    lineColor = color(random(100, 180), random(80, 140), random(60, 120));
     break;
-  case 9:
-    lineColor = color(random(10, 50), random(40, 100), random(70, 120)); // Cool gray-blues
+  case 9:  // Bright Cyan & Sky Blue
+    lineColor = color(random(50, 150), random(200, 255), random(200, 255));
     break;
-  case 10:
-    lineColor = color(random(0, 50), random(50, 100), random(100, 150)); // Steel blues
+  case 10: // Deep Midnight Blues
+    lineColor = color(random(0, 50), random(50, 100), random(150, 255));
     break;
-  case 11:
-    lineColor = color(random(20, 60), random(0, 40), random(60, 120)); // Slate
+  case 11: // Dark Purples & Plums
+    lineColor = color(random(50, 120), random(0, 50), random(80, 150));
     break;
-  case 12:
-    lineColor = color(random(40, 100), random(60, 120), random(100, 180)); // Forest green
+  case 12: // Pale Ice Blues
+    lineColor = color(random(150, 220), random(200, 255), random(220, 255));
     break;
-  case 13:
-    lineColor = color(random(10, 60), random(60, 140), random(90, 160)); // Mossy greens
+  case 13: // Dark & Dusty Greens
+    lineColor = color(random(20, 100), random(50, 120), random(20, 80));
     break;
-  case 14:
-    lineColor = color(random(30, 80), random(70, 130), random(130, 200)); // Ocean blues
+  case 14: // Warm Golden Browns
+    lineColor = color(random(150, 220), random(100, 180), random(50, 100));
     break;
-  case 15:
-    lineColor = color(0, random(100, 180), 0); // Fallback dark green
+  case 15: // Dark Grayscale
+    float gray = random(10, 80);
+    lineColor = color(gray, gray, gray);
     break;
-  case 16:
-    lineColor = color(random(150, 255), random(50, 150), random(0, 50)); // Bright reds and oranges
+  case 16: // Light Grayscale
+    float lightGray = random(170, 240);
+    lineColor = color(lightGray, lightGray, lightGray);
     break;
-  case 17:
-    lineColor = color(random(200, 255), random(150, 200), random(0, 50)); // Vibrant yellows and golds
+  case 17: // Vibrant Pinks & Magentas
+    lineColor = color(random(200, 255), random(50, 150), random(150, 255));
     break;
-  case 18:
-    lineColor = color(random(150, 200), random(100, 150), random(50, 100)); // Warm earth tones
+  case 18: // Warm Peach & Coral
+    lineColor = color(random(255), random(100, 180), random(80, 140));
     break;
-  case 19:
-    lineColor = color(random(200, 255), random(0, 100), random(150, 255)); // Pink to purple
+  case 19: // Forest Green & Moss
+    lineColor = color(random(30, 80), random(90, 160), random(50, 120));
     break;
-  case 20:
-    lineColor = color(random(150, 255), random(150, 255), random(150, 255)); // Soft pastel colors
+  case 20: // Sunset Colors
+    lineColor = color(random(150, 255), random(50, 120), random(100, 200));
     break;
-  case 21:
-    float gray = random(100, 200);
-    lineColor = color(gray, gray, gray); // Grayscale
+  case 21: // Very Dark Gray & Black Tones
+    lineColor = color(random(0, 40), random(0, 40), random(0, 40));
     break;
-  case 22:
-    lineColor = color(random(50, 100), random(150, 255), random(150, 255)); // Mint greens and blues
+  case 22: // Electric Blue & Vivid Cyan
+    lineColor = color(random(50, 150), random(100, 255), random(200, 255));
     break;
-  case 23:
-    lineColor = color(random(200, 255), random(100, 150), random(50, 100)); // Coral and peach tones
+  case 23: // Royal Blue & Deep Indigo
+    lineColor = color(random(0, 80), random(50, 120), random(150, 255));
     break;
-  case 24:
-    lineColor = color(random(150, 255), random(50, 100), random(100, 200)); // Sunset colors
+  case 24: // Soft Cream & Off-Whites
+    lineColor = color(random(220, 255), random(200, 255), random(180, 230));
     break;
-  case 25:
-    lineColor = color(random(100, 200), random(150, 255), random(0, 100)); // Bright lime and neon
+  case 25: // Burnt Orange & Copper
+    lineColor = color(random(180, 240), random(90, 150), random(40, 100));
     break;
-  case 26:
-    lineColor = color(random(200, 255), random(100, 200), random(150, 255)); // Bright lavender
+  case 26: // Bright Lime & Yellow Greens
+    lineColor = color(random(150, 255), random(200, 255), random(50, 150));
     break;
-  case 27:
-    lineColor = color(random(150, 255), random(50, 150), random(50, 100)); // Tangerine and soft orange
+  case 27: // Dark Burgundy & Plum
+    lineColor = color(random(80, 150), random(0, 50), random(50, 100));
     break;
-  case 28:
-    lineColor = color(random(150, 255), random(150, 200), random(50, 150)); // Lemon and lime
+  case 28: // Deep Turquoise & Teal
+    lineColor = color(random(0, 80), random(100, 180), random(120, 255));
     break;
-  case 29:
-    lineColor = color(random(50, 100), random(200, 255), random(200, 255)); // Aqua and cyan
+  case 29: // Candy Pink & Bubblegum
+    lineColor = color(random(230, 255), random(120, 200), random(150, 255));
     break;
-  case 30:
-    lineColor = color(random(200, 255), random(150, 255), random(0, 50)); // Goldenrod
+  case 30: // Fiery Scarlet & Deep Red
+    lineColor = color(random(180, 255), random(0, 80), random(0, 60));
     break;
-  case 31:
-    lineColor = color(random(150, 255), random(50, 150), random(100, 200)); // Berry colors
+  case 31: // Mixed Fluorescent Colors
+    lineColor = color(random(180, 255), random(180, 255), random(50, 150));
     break;
-  case 32:
-    lineColor = color(random(50, 150), random(100, 200), random(150, 255)); // Cool blues
+  case 32: // Metallic Silver & Chrome
+    float silver = random(180, 255);
+    lineColor = color(silver, silver, silver);
     break;
-  case 33:
-    lineColor = color(random(200, 255), random(100, 150), random(50, 100)); // Warm oranges
+  case 33: // Jet Black
+    lineColor = color(0, 0, 0);
     break;
-  case 34:
-    lineColor = color(random(150, 255), random(50, 150), random(50, 150)); // Soft pinks
+  case 34: // Ultra White
+    lineColor = color(255, 255, 255);
     break;
-  case 35:
-    lineColor = color(random(50, 100), random(100, 150), random(200, 255)); // Bright blues
+  case 35: // Arctic Ice Blue
+    lineColor = color(random(200, 255), random(230, 255), random(250, 255));
     break;
-  case 36:
-    lineColor = color(random(200, 255), random(200, 255), random(150, 200)); // Pastel yellows
+  case 36: // Toxic Slime Green
+    lineColor = color(random(50, 150), random(230, 255), random(50, 100));
     break;
-  case 37:
-    lineColor = color(random(100, 200), random(200, 255), random(50, 150)); // Spring greens
+  case 37: // Radioactive Yellow-Green
+    lineColor = color(random(200, 255), random(255), random(0, 80));
     break;
-  case 38:
-    lineColor = color(random(150, 255), random(100, 200), random(50, 100)); // Coral tones
+  case 38: // Velvet Crimson
+    lineColor = color(random(160, 220), random(0, 50), random(50, 100));
     break;
-  case 39:
-    lineColor = color(random(50, 150), random(50, 150), random(200, 255)); // Deep purples
+  case 39: // Cosmic Purple
+    lineColor = color(random(120, 180), random(20, 80), random(160, 255));
     break;
-  case 40:
-    lineColor = color(random(100, 150), random(200, 255), random(200, 255)); // Soft aquas
+  case 40: // Ocean Depths Blue-Green
+    lineColor = color(random(0, 50), random(100, 180), random(150, 255));
     break;
-  case 41:
-    lineColor = color(random(200, 255), random(150, 255), random(50, 150)); // Peachy tones
+  case 41: // Steampunk Brass
+    lineColor = color(random(180, 220), random(120, 180), random(60, 100));
     break;
-  case 42:
-    lineColor = color(random(150, 255), random(100, 200), random(100, 200)); // Lavender tones
+  case 42: // Glowing Ember Orange
+    lineColor = color(random(200, 255), random(80, 150), random(0, 50));
     break;
-  case 43:
-    lineColor = color(random(100, 150), random(150, 255), random(100, 200)); // Mint greens
+  case 43: // Shadowy Amethyst
+    lineColor = color(random(80, 150), random(50, 100), random(120, 200));
     break;
-  case 44:
-    lineColor = color(random(50, 100), random(200, 255), random(150, 255)); // Bright teals
+  case 44: // Midnight Green
+    lineColor = color(random(0, 60), random(70, 120), random(50, 100));
     break;
-  case 45:
-    lineColor = color(random(150, 200), random(100, 150), random(200, 255)); // Cool grays
+  case 45: // Alien Plasma
+    lineColor = color(random(100, 180), random(200, 255), random(50, 150));
     break;
-  case 46:
-    lineColor = color(random(200, 255), random(200, 255), random(50, 100)); // Soft creams
+  case 46: // Antique Rose
+    lineColor = color(random(180, 220), random(100, 160), random(120, 180));
     break;
-  case 47:
-    lineColor = color(random(50, 100), random(150, 200), random(100, 150)); // Muted olives
+  case 47: // Holographic Blue-Violet
+    lineColor = color(random(100, 160), random(120, 200), random(200, 255));
     break;
-  case 49:
-    lineColor = color(random(100, 150), random(50, 100), random(150, 200)); // Dusty roses
+  case 48: // Desert Sand
+    lineColor = color(random(230, 255), random(180, 220), random(150, 200));
     break;
-  case 50:
-    lineColor = color(random(200, 255), random(50, 100), random(100, 200)); // Vibrant reds
+  case 49: // Aurora Borealis Green
+    lineColor = color(random(50, 150), random(200, 255), random(100, 200));
     break;
-  case 51:
-    lineColor = color(random(150, 255), random(150, 200), random(100, 150)); // Light mauves
+  case 50: // Deep Space Nebula Purple
+    lineColor = color(random(40, 100), random(20, 60), random(100, 255));
     break;
-  case 52:
-    lineColor = color(random(50, 150), random(100, 200), random(50, 150)); // Forest greens
+  case 51: // Stormy Sky Gray-Blue
+    lineColor = color(random(100, 160), random(100, 160), random(140, 200));
     break;
-  case 53:
-    lineColor = color(random(100));
+  case 52: // Molten Lava Red
+    lineColor = color(random(180, 255), random(30, 80), random(0, 50));
     break;
-  case 54:
-    lineColor = color(random(10, 30), random(10, 30), random(10, 30)); // Very dark gray
+  case 53: // Bioluminescent Glow Cyan
+    lineColor = color(random(0, 100), random(200, 255), random(220, 255));
     break;
-  case 55:
-    lineColor = color(random(0, 20), random(0, 20), random(50, 70)); // Dark blue
+  case 54: // Rusted Copper
+    lineColor = color(random(120, 180), random(80, 140), random(50, 100));
     break;
-  case 56:
-    lineColor = color(random(20, 40), random(0, 10), random(0, 10)); // Dark red
+  case 55: // Soft Orchid Pink
+    lineColor = color(random(200, 255), random(120, 180), random(150, 220));
     break;
-  case 57:
-    lineColor = color(random(0, 10), random(20, 40), random(0, 10)); // Dark green
+  case 56: // Cyberpunk Neon Magenta
+    lineColor = color(random(200, 255), random(20, 100), random(180, 255));
     break;
-  case 58:
-    lineColor = color(random(20, 40), random(20, 40), random(0, 10)); // Dark yellow-brown
+  case 57: // Glistening Pearl White
+    lineColor = color(random(230, 255), random(230, 255), random(230, 255));
     break;
-  case 59:
-    lineColor = color(random(10, 30), random(10, 30), random(50, 70)); // Dark cyan
+  case 58: // Dragonfruit Fuchsia
+    lineColor = color(random(200, 255), random(30, 100), random(120, 200));
     break;
-  case 60:
-    lineColor = color(random(0, 20), random(20, 40), random(50, 70)); // Dark teal
+  case 59: // Distant Galaxy Blue
+    lineColor = color(random(0, 80), random(50, 120), random(200, 255));
     break;
-  case 61:
-    lineColor = color(random(40, 60), random(10, 30), random(10, 30)); // Dark burgundy
+  case 60: // Arctic Blizzard White-Blue
+    lineColor = color(random(200, 255), random(220, 255), random(240, 255));
     break;
-  case 62:
-    lineColor = color(random(0, 20), random(0, 20), random(20, 40)); // Dark purple
+  case 61: // Radioactive Cyan
+    lineColor = color(random(0, 100), random(250, 255), random(200, 255));
     break;
-  case 63:
-    lineColor = color(random(10, 30), random(10, 30), random(0, 10)); // Dark olive
+  case 62: // Pumpkin Spice
+    lineColor = color(random(200, 255), random(100, 150), random(50, 100));
     break;
-  default:
+  case 63: // Electric Grape Purple
+    lineColor = color(random(150, 200), random(50, 100), random(200, 255));
+    break;
+  case 64: // Glacial Teal
+    lineColor = color(random(50, 150), random(200, 255), random(180, 255));
+    break;
+  case 65: // Starry Night Dark Blue
+    lineColor = color(random(0, 40), random(0, 40), random(150, 255));
+    break;
+  case 66: // Deep Cherry Red
+    lineColor = color(random(150, 220), random(0, 50), random(50, 100));
+    break;
+  case 67: // Sapphire Ice
+    lineColor = color(random(0, 50), random(100, 200), random(200, 255));
+    break;
+  case 68: // Sunset Mauve
+    lineColor = color(random(180, 240), random(100, 160), random(150, 210));
+    break;
+  case 69: // Aged Parchment
+    lineColor = color(random(200, 255), random(180, 230), random(150, 200));
+    break;
+  case 70: // Lava Lamp Pink-Orange
+    lineColor = color(random(200, 255), random(50, 150), random(80, 180));
+    break;
+  case 71: // Twilight Lavender
+    lineColor = color(random(140, 200), random(80, 140), random(160, 220));
+    break;
+  case 72: // Shimmering Gold
+    lineColor = color(random(220, 255), random(180, 220), random(50, 100));
+    break;
+  case 73: // Solar Eclipse Black
+    lineColor = color(random(10, 30), random(10, 30), random(10, 30));
+    break;
+  case 74: // Jellyfish Glow Blue
+    lineColor = color(random(50, 150), random(180, 255), random(200, 255));
+    break;
+  case 75: // Martian Dust Orange
+    lineColor = color(random(180, 255), random(80, 140), random(60, 100));
+    break;
+  case 76: // Deep Indigo Night
+    lineColor = color(random(40, 80), random(0, 50), random(100, 200));
+    break;
+  case 77: // Frosted Mint
+    lineColor = color(random(180, 220), random(240, 255), random(200, 255));
+    break;
+
+  default: // Random Full-Spectrum Colors
     lineColor = color(random(255), random(255), random(255));
+    break;
   }
 
   return lineColor;
 }
+
 
 // Helper function to convert float array to String array
 String[] floatArrayToStringArray(float[] array) {
@@ -328,7 +378,7 @@ void drawColorIndicator() {
   if (settings.sameColorForAllNonDLines[0]) {
 
     for (Line l : lines) {
-      if (!l.isDeath && !l.noPhysics && !l.isBouncy && !l.hasGrapple) {
+      if (!l.isDeath && !l.noPhysics && !l.isBouncy && !l.hasGrapple && !l.isNoJump) {
         nonDeathColorIndicator = l.lineColor;
         break;
       }
@@ -383,7 +433,7 @@ void drawColorIndicator() {
     if (colors[i] != -1) {
       float currentX = xPositions[index];
       color c = colors[i];
-
+      rectMode(CENTER);
       fill(c);
       noStroke();
       rect(currentX - size / 2, yPos - size / 2, size, size); // Draw the square
@@ -404,7 +454,7 @@ void setLockAndColor(String controllerName, boolean lockState) {
   ctrl.setColorBackground(bgColor);
 }
 
-float getSpawnSize() {
+float getSpawnRadius() {
   float size = 0;
   int mapSize = (int) Math.floor(settings.mapSize[0]);
 

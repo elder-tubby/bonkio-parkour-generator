@@ -37,6 +37,8 @@ class Line {
     isCapzone = false;
     isNoJump = false;
 
+    removeBounceAndDeathIfHasGrapple();
+
     if (!settings.sameColorForAllDLines[0]) {
       settings.deathColor = getRandomColor((int)random(numOfColorSchemesAvailable));
     }
@@ -63,11 +65,19 @@ class Line {
     id = generateUniqueId();
   }
 
+  void removeBounceAndDeathIfHasGrapple() {
+
+    if (hasGrapple) {
+      isDeath = false;
+      isBouncy = false;
+    }
+  }
+
   void setColors() {
-    lineColor = getRandomColor((int)random(numOfColorSchemesAvailable));
-    if (isDeath)
+    //lineColor = getRandomColor((int)random(numOfColorSchemesAvailable));
+    if (isDeath && !hasGrapple)
       lineColor = settings.deathColor;
-    else if (isBouncy)
+    else if (isBouncy && !hasGrapple)
       lineColor = settings.bouncyColor;
     else if (hasGrapple)
       lineColor = settings.grappleColor;
@@ -85,6 +95,9 @@ class Line {
   }
 
   void drawLine(boolean isSelected) {
+    if (!noPhysics)
+      setColors();
+
     pushMatrix();
     translate(centerX, centerY);
     rotate(radians(angle));
@@ -156,18 +169,31 @@ class Line {
       edge2 = new PVector(0, -halfH);
       edge3 = new PVector(0, halfH);
 
+      if (settings.lineToMoveConnectPointStart[0] == 0 && settings.lineToMoveConnectPointEnd[0] == 0) {
+        settings.lineToMoveConnectPointStart[0] = 0.01;
+      }
+
       float distanceFactor = random(settings.lineToMoveConnectPointStart[0], settings.lineToMoveConnectPointEnd[0]);
+      //distanceFactor = 0.01;
+      //distanceFactor = random(1) < 0.5 ? distanceFactor * (-1) : distanceFactor; // Don't think this is needed
 
       edge0 = new PVector(-halfW * distanceFactor, 0); // Left edge point in local coordinates
       edge1 = new PVector(halfW * distanceFactor, 0); // Right edge point in local coordinates
       edge2 = new PVector(0, -halfH * distanceFactor);
       edge3 = new PVector(0, halfH * distanceFactor);
     } else { // the edgepoints returned for lineToConnectWith are at the corners of the edges
-      if (random(1) < 0.5) { // randomly choose the side of the corners
+      float randomChoice = random(1);
+      if (randomChoice < 0.25) { // randomly choose the side of the corners
         edge0 = new PVector(-halfW, -halfH);
         edge1 = new PVector(halfW, -halfH);
-      } else {
+      } else if (randomChoice >= 0.25 && randomChoice < 0.5) {
         edge0 = new PVector(-halfW, halfH);
+        edge1 = new PVector(halfW, halfH);
+      } else if (randomChoice >= 0.5 && randomChoice < 0.75) {
+        edge0 = new PVector(-halfW, halfH);
+        edge1 = new PVector(-halfW, -halfH);
+      } else if (randomChoice >= 0.75 && randomChoice < 1) {
+        edge0 = new PVector(halfW, -halfH);
         edge1 = new PVector(halfW, halfH);
       }
     }
@@ -222,10 +248,17 @@ class Line {
     return abs(rotatedX) <= width / 2 && abs(rotatedY) <= height / 2;
   }
 
-  void setAsFrame() {
+  void setAsFrame(boolean areFramesDeath) {
     isFrame = true;
+    isDeath = areFramesDeath;
     isBouncy = settings.areFramesBouncy[0];
-    bounciness = isBouncy ? settings.globalBounciness : "-1";
+    hasGrapple = false;
+    if (isBouncy) {
+      makeBouncy();
+    } else {
+      makeNonBouncy();
+    }
+
     if (isDeath)
       lineColor = settings.deathColor;
     else if (isBouncy)
@@ -239,7 +272,13 @@ class Line {
   void setAsFloor() {
     isFloor = true;
     isBouncy = settings.areFloorsBouncy[0];
-    bounciness = isBouncy ? settings.globalBounciness : "-1";
+    if (isBouncy) {
+      makeBouncy();
+    } else {
+      makeNonBouncy();
+    }
+
+    removeBounceAndDeathIfHasGrapple();
     if (isDeath)
       lineColor = settings.deathColor;
     else if (isBouncy)
@@ -278,6 +317,7 @@ class Line {
   }
 
   void makeNonBouncy() { // for changing from bouncy to non bouncy
+    isBouncy = false;
     bounciness = "-1";
     if (isDeathOgValue) {
       isDeath = isDeathOgValue;

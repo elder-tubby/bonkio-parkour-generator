@@ -8,6 +8,7 @@ void saveLineAttributes() {
     float halfMapHeight = (endOfHeight - startOfHeight) / 2;
     float convertedXPos = spawnPosition.x - startOfWidth - halfMapWidth;
     float convertedYPos = spawnPosition.y - startOfHeight - halfMapHeight;
+
     spawnX = convertedXPos;
     spawnY = convertedYPos;
   } else {
@@ -15,10 +16,11 @@ void saveLineAttributes() {
     spawnY = 99999;
   }
 
-  int mapSize = getMapSize();
-
+  //int mapSize = getMapSize();
+  int mapSize = (int) Math.floor(settings.mapSize[0]);
   // Create the main JSON object
   JSONObject jsonObject = new JSONObject();
+  jsonObject.put("version", 1);
 
   // Create the "spawn" JSON object and add it to the main object
   JSONObject spawnObject = new JSONObject();
@@ -33,6 +35,13 @@ void saveLineAttributes() {
   JSONArray linesArray = new JSONArray();
 
   int id = 0;
+  HashMap<Line, Integer> lineIdMap = new HashMap<>(); // Track IDs for mapping
+
+  // First pass: Assign IDs to all lines
+  for (Line line : lines) {
+    if (line.isOnlyForProgram) continue;
+    lineIdMap.put(line, id++);
+  }
 
   for (Line line : lines) {
     if (line.isOnlyForProgram) continue;
@@ -44,7 +53,7 @@ void saveLineAttributes() {
 
     // Create the line JSON object
     JSONObject lineObject = new JSONObject();
-    lineObject.put("id", id);
+    lineObject.put("id", lineIdMap.get(line));
     lineObject.put("x", line.centerX);
     lineObject.put("y", line.centerY);
     lineObject.put("width", line.width);
@@ -62,6 +71,10 @@ void saveLineAttributes() {
     lineObject.put("isBgLine", line.isBgLine); // Add to JS
     lineObject.put("isOnlyForProgram", line.isOnlyForProgram); // Add to JS
 
+    if (!line.isBouncy) {
+      line.bounciness = "-1";
+    }
+
     if (line.bounciness != null && !line.bounciness.equals("null")) {
       // If bounciness is a valid number, put it as a number (without quotes)
       lineObject.put("bounciness", Float.parseFloat(line.bounciness));
@@ -70,6 +83,14 @@ void saveLineAttributes() {
       lineObject.put("bounciness", JSONObject.NULL);
     }
     lineObject.put("friction", line.friction);
+
+    // Check if this line has a noPhysicsDuplicate and store its ID
+    if (!noPhysics && noPhysicsDuplicateLineMap != null && noPhysicsDuplicateLineMap.containsKey(line)) {
+      Line duplicate = noPhysicsDuplicateLineMap.get(line);
+      if (lineIdMap.containsKey(duplicate)) {
+        lineObject.put("noPhysicsDuplicateId", lineIdMap.get(duplicate));
+      }
+    }
 
     // Add the line object to the lines array
     linesArray.append(lineObject);
@@ -114,7 +135,12 @@ void handlePasteLineDataBtnClick() {
   cp5.getController("lineDataCopiedLabel").hide();
 
   // Safely retrieve mapSize, defaulting to a value if it doesn't exist
-  int mapSize = jsonData.hasKey("mapSize") ? jsonData.getInt("mapSize") : 7; // Default to 0 if "mapSize" is missing
+  int mapSize = jsonData.hasKey("version") ?
+    (jsonData.hasKey("mapSize") ? jsonData.getInt("mapSize") : 7)
+    : getTransformedMapSize(jsonData.hasKey("mapSize") ? jsonData.getInt("mapSize") : 7);
+
+  settings.mapSize[0] = mapSize;
+  uiManager.customMapPage.updateControllerByName("mapSize", mapSize);
 
   // Safely retrieve spawn data, creating a default if "spawn" key is missing
   JSONObject spawnData = jsonData.hasKey("spawn") ? jsonData.getJSONObject("spawn") : new JSONObject(); // Default to an empty JSONObject if "spawn" is missing
@@ -139,7 +165,18 @@ void handlePasteLineDataBtnClick() {
       spawnPosition.set(spawnX, spawnY);
   }
   // Step 4: Get the "lines" array from JSON
-  JSONArray linesArray = jsonData.getJSONArray("lines");
+  //JSONArray linesArray = jsonData.getJSONArray("lines");
+
+  JSONArray linesArray = jsonData.hasKey("lines") ? jsonData.getJSONArray("lines") : null;
+
+  if (linesArray == null) {
+    println("The 'lines' key is missing.");
+    return;
+  }
+
+  // Step 6: Track lines by ID for later mapping
+  HashMap<Integer, Line> lineIdMap = new HashMap<>();
+
 
   // Step 5: Iterate through the lines array and create new Line objects
   for (int i = 0; i < linesArray.size(); i++) {
@@ -147,12 +184,12 @@ void handlePasteLineDataBtnClick() {
     JSONObject lineData = linesArray.getJSONObject(i);
 
     // Extract the basic attributes for the Line object
-    float x = lineData.getFloat("x");
-    float y = lineData.getFloat("y");
-    float width = lineData.getFloat("width");
-    float height = lineData.getFloat("height");
-    float angle = lineData.getFloat("angle");
-    boolean isDeath = lineData.getBoolean("isDeath");
+    float x = lineData.hasKey("x") && lineData.get("x") != null ? lineData.getFloat("x") : (endOfWidth - startOfWidth);
+    float y = lineData.hasKey("y") && lineData.get("y") != null ? lineData.getFloat("y") : (endOfHeight - startOfHeight);
+    float width = lineData.hasKey("width") && lineData.get("width") != null ? lineData.getFloat("width") : 1.0f;
+    float height = lineData.hasKey("height") && lineData.get("height") != null ? lineData.getFloat("height") : 1.0f;
+    float angle = lineData.hasKey("angle") && lineData.get("angle") != null ? lineData.getFloat("angle") : 0.0f;
+    boolean isDeath = lineData.hasKey("isDeath") && lineData.get("isDeath") != null ? lineData.getBoolean("isDeath") : false;
 
     // Create the new Line object using constructor
     Line newLine = new Line(x, y, width, height, angle, isDeath);
@@ -217,11 +254,29 @@ void handlePasteLineDataBtnClick() {
 
     ArrayList<Line> tempLines = new ArrayList<Line>();
     tempLines.add(newLine);
+    lineIdMap.put(newLine.id, newLine); // Store by ID
     lines.addAll(tempLines);
   }
 
+  // Second pass: Link physics lines with their noPhysics duplicates
+  for (int i = 0; i < linesArray.size(); i++) {
+    JSONObject lineData = linesArray.getJSONObject(i);
+
+    if (lineData.hasKey("noPhysicsDuplicateId")) {
+      int physicsLineId = lineData.getInt("id");
+      int duplicateId = lineData.getInt("noPhysicsDuplicateId");
+
+      if (lineIdMap.containsKey(physicsLineId) && lineIdMap.containsKey(duplicateId)) {
+        Line physicsLine = lineIdMap.get(physicsLineId);
+        Line duplicateLine = lineIdMap.get(duplicateId);
+
+        noPhysicsDuplicateLineMap.put(physicsLine, duplicateLine);
+      }
+    }
+  }
+
   matchProgramColorsToPastedDataColors();
-  lineManager.moveLinesForProgramToFront();
+  lineManager.moveLinesForwardOrBackward();
 
   // Optional: Provide feedback to the user that the lines were pasted and processed
   println("Lines have been successfully pasted and added!");
@@ -254,6 +309,8 @@ int getMapSize() {
   else if (Math.floor(settings.mapSize[0]) == 13) return 5;
   else return 9; // Default return value
 }
+
+
 
 color decimalToRgb(int decimal) {
   int r = (decimal >> 16) & 0xFF; // Extract red component
@@ -303,4 +360,27 @@ String getClipboardString() {
 
   // Return null if no text data is available
   return null;
+}
+
+// Function to transform mapSize based on the mapping. Only used for old JSON files when mapSize was stored differently.
+int getTransformedMapSize(int mapSize) {
+  println("mapsize in getransformedmap: " + mapSize);
+  // Define the map size transformation mapping
+  HashMap<Integer, Integer> mapSizeMapping = new HashMap<>();
+  mapSizeMapping.put(30, 1);
+  mapSizeMapping.put(24, 2);
+  mapSizeMapping.put(20, 3);
+  mapSizeMapping.put(17, 4);
+  mapSizeMapping.put(15, 5);
+  mapSizeMapping.put(13, 6);
+  mapSizeMapping.put(12, 7);
+  mapSizeMapping.put(10, 8);
+  mapSizeMapping.put(9, 9);
+  mapSizeMapping.put(8, 10);
+  mapSizeMapping.put(7, 11);
+  mapSizeMapping.put(6, 12);
+  mapSizeMapping.put(5, 13);
+
+  // Return the transformed map size, or default to 9 if no match
+  return mapSizeMapping.getOrDefault(mapSize, 9);
 }

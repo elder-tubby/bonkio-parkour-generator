@@ -11,11 +11,12 @@ class EditLinesManager {
   Button deleteLineBtn;
   Button cancelProcessingLinesButton;
 
+  Textlabel multiSelectionLabel;
+
   List<Controller> otherOptions;
   Button changeColorsBtn;
   Button addNewLineBtn;
   Button spawnBtn;
-  Button exchangeBAndDLinesBtn;
 
   float startXPos = startOfWidth + 10;
   float startYPos = 615;
@@ -56,7 +57,17 @@ class EditLinesManager {
       bgButtonManager.hide();
       showControllers(lineProperties);
       updateSlidersAndToggles();
+    } else if (!multiSelectedLines.isEmpty()) {
+      hideControllers(otherOptions);
+      bgButtonManager.hide();
+      deleteLineBtn.show();
+      toggleBounce.show();
+      toggleDeath.show();
+      toggleGrapple.show();
+      toggleNoJump.show();
+      showMultiSelectionText();
     } else {
+      hideMultiSelectionText();
       hideControllers(lineProperties);
       showControllers(otherOptions);
       bgButtonManager.show();
@@ -129,9 +140,9 @@ class EditLinesManager {
 
     cp5.addButton("pasteLineData")
       .setPosition(endOfWidth - 10 - 150, startOfHeight - 50)
-      .setSize(160, 30)
+      .setSize(140, 30)
       .setFont(tabFont)
-      .setLabel("Paste and create new map")
+      .setLabel("Paste map (CTRL + P)")
       .onClick(new CallbackListener() {
       public void controlEvent(CallbackEvent e) {
         handlePasteLineDataBtnClick();
@@ -172,21 +183,9 @@ class EditLinesManager {
 
     otherOptions.add(addNewLineBtn);
 
-    exchangeBAndDLinesBtn   = cp5.addButton("exchangeBAndDLinesBtn")
-      .setPosition(startXPos + 220, startYPos + 35)
-      .setSize(100, 30)
-      .setFont(tabFont)
-      .setLabel("exchange\nB And D Lines")
-      .onClick(new CallbackListener() {
-      public void controlEvent(CallbackEvent e) {
-        exchangeBAndDLines();
-      }
-    }
-    );
 
 
 
-    otherOptions.add(exchangeBAndDLinesBtn);
 
     spawnBtn = cp5.addButton("spawnBtn")
       .setPosition(startXPos + 220, startYPos)
@@ -241,22 +240,14 @@ class EditLinesManager {
     );
     xPos = (int) startXPos + 60 + 50 + 330;
 
-    toggleNoJump = addToggle("toggleNoJump", xPos, (int) startYPos + yDistBtwSliders * 0, "no-jump", (e) -> {
-      selectedLine.isNoJump = e.getController().getValue() == 1;
-      if (selectedLine.isNoJump) selectedLine.setAsNoJump();
-      else selectedLine.isNoJump = false;
-    }
-    );
-
-    toggleCapzone = addToggle("toggleCapzone", xPos, (int) startYPos + yDistBtwSliders * 1, "capzone", (e) -> {
-      selectedLine.isCapzone = e.getController().getValue() == 1;
-      if (selectedLine.isCapzone) selectedLine.setAsCapzone();
-      else selectedLine.isCapzone = false;
+    toggleNoJump = addToggle("toggleNoJump", xPos, (int) startYPos + yDistBtwSliders * 0, "no-jump (n)", (e) -> {
+      boolean isNoJump = e.getController().getValue() == 1;
+      handleNoJumpToggle(isNoJump);
     }
     );
 
     deleteLineBtn = cp5.addButton("deleteLineBtn")
-      .setPosition(xPos, startYPos + yDistBtwSliders * 2)
+      .setPosition(xPos, startYPos + yDistBtwSliders * 1)
       .setSize(80, 20)
       .setFont(tabFont)
       .setLabel("delete (del)")
@@ -271,6 +262,14 @@ class EditLinesManager {
     );
 
     lineProperties.add(deleteLineBtn);
+
+
+    toggleCapzone = addToggle("toggleCapzone", xPos, (int) startYPos + yDistBtwSliders * 2, "capzone", (e) -> {
+      selectedLine.isCapzone = e.getController().getValue() == 1;
+      if (selectedLine.isCapzone) selectedLine.setAsCapzone();
+      else selectedLine.isCapzone = false;
+    }
+    );
   }
 
   Slider addSlider(String name, int x, int y, float min, float max, CallbackListener listener) {
@@ -334,11 +333,26 @@ class EditLinesManager {
   void handleDeleteLineBtnClick() {
     cp5.getController("lineDataCopiedLabel").hide();
     lines.remove(selectedLine);
+    // Remove all lines that are in the multiselectedLines list
+    for (int i = 0; i < multiSelectedLines.size(); i++) {
+      lines.remove(multiSelectedLines.get(i));
+    }
+    multiSelectedLines.clear();
     selectedLine = null;
   }
 
   void handleBounceToggle(boolean isBouncy) {
-    if (selectedLine != null) {
+    if (multiSelectedLines.size() > 0) {
+      for (Line line : multiSelectedLines) {
+        println("remember to delete me");
+        line.isBouncy = isBouncy;
+        if (line.isBouncy) {
+          line.makeBouncy();
+        } else {
+          line.makeNonBouncy();
+        }
+      }
+    } else if (selectedLine != null) {
       selectedLine.isBouncy = isBouncy;
       if (selectedLine.isBouncy) {
         selectedLine.makeBouncy();
@@ -349,7 +363,16 @@ class EditLinesManager {
   }
 
   void handleDeathToggle(boolean isDeath) {
-    if (selectedLine != null) {
+    if (multiSelectedLines.size() > 0) {
+      for (Line line : multiSelectedLines) {
+        line.isDeath = isDeath;
+        if (line.isDeath) {
+          line.makeDeath();
+        } else {
+          line.makeNonDeath();
+        }
+      }
+    } else if (selectedLine != null) {
       selectedLine.isDeath = isDeath;
       if (selectedLine.isDeath) {
         selectedLine.makeDeath();
@@ -360,7 +383,16 @@ class EditLinesManager {
   }
 
   void handleGrappleToggle(boolean hasGrapple) {
-    if (selectedLine != null) {
+    if (multiSelectedLines.size() > 0) {
+      for (Line line : multiSelectedLines) {
+        line.hasGrapple = hasGrapple;
+        if (line.hasGrapple) {
+          line.makeGrapplable();
+        } else {
+          line.makeNonGrapplable();
+        }
+      }
+    } else if (selectedLine != null) {
       selectedLine.hasGrapple = hasGrapple;
       if (selectedLine.hasGrapple) {
         selectedLine.makeGrapplable();
@@ -370,6 +402,27 @@ class EditLinesManager {
     }
   }
 
+  void handleNoJumpToggle(boolean isNoJump) {
+    if (multiSelectedLines.size() > 0) {
+      for (Line line : multiSelectedLines) {
+        line.isNoJump = isNoJump;
+        if (line.isNoJump) {
+          line.setAsNoJump();
+        } else {
+          line.isNoJump = false;
+        }
+      }
+    } else if (selectedLine != null) {
+      selectedLine.isNoJump = isNoJump;
+      if (selectedLine.isNoJump) {
+        selectedLine.setAsNoJump();
+      } else {
+        selectedLine.isNoJump = false;
+      }
+    }
+  }
+
+
   void handlePlatsColorBtnClick() {
     cp5.getController("lineDataCopiedLabel").hide();
     lineManager.setRandomValues();
@@ -377,8 +430,14 @@ class EditLinesManager {
       if (!line.noPhysics)
         line.setColors();
     }
-    if (settings.addNoPhysicsLineDuplicates[0]) lineManager.duplicateAndScaleDownLines(lines);
+
+    lineManager.removeNoPhysicsDuplicatesFromLines();
+    if (settings.addNoPhysicsLineDuplicates[0]) {
+      lineManager.duplicateAndScaleDownLines(lines);
+    }
+    //lineManager.moveLinesForwardOrBackward();
   }
+
 
   void handleSpawnBtnClick() {
 
@@ -406,7 +465,12 @@ class EditLinesManager {
   }
 
   void handleCopyLineDataBtnClick() {
+    selectedLine = null;
     lineManager.moveLinesForwardOrBackward();
+    if (settings.addNoPhysicsLineDuplicates[0]) {
+      lineManager.removeNoPhysicsDuplicatesFromLines();
+      lineManager.duplicateAndScaleDownLines(lines);
+    }
     saveLineAttributes();
   }
 
@@ -427,20 +491,16 @@ class EditLinesManager {
     return angle;
   }
 
-  void exchangeBAndDLines() {
-    // Iterate through the lines list to find all lines that are death
-    for (int i = 0; i < lines.size(); i++) {
-      Line line = lines.get(i);
+  void showMultiSelectionText() {
 
-      if (line.noPhysics) continue;
+    multiSelectionLabel = cp5.addTextlabel("multiSelectionLabel")
+      .setPosition(startXPos + 50, startYPos + 4)
+      .setFont(defaultFont)
+      .setText("WIDTH:          CTRL + L/R\n\nHEIGHT:         CTRL + U/D\n\nANGLE:          SHIFT + L/R");
+  }
 
-      if (line.isDeath) {
-        // Set the death line to be bouncy
-        line.makeBouncy();
-      } else if (line.isBouncy) {
-        // Set the bouncy line to be death
-        line.makeDeath();
-      }
-    }
+  void hideMultiSelectionText() {
+    if (multiSelectionLabel != null)
+      multiSelectionLabel.hide();
   }
 }

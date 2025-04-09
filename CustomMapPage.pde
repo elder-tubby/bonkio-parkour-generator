@@ -253,13 +253,20 @@ class CustomMapPage {
     subPage2Buttons.add(createToggle("addFrames", settings.addFrames, "Add Frames", groupName));
     yPosOfGroupChild += uiGap;
 
-    subPage2Buttons.add(createSlider("frameWidth", 1, 100, settings.frameWidth, "Frame Width", groupName));
+    subPage2Buttons.add(createSlider("frameWidth", 1, 200, settings.frameWidth, "Frame Width", groupName));
     yPosOfGroupChild += uiGap;
 
     subPage2Buttons.add(createToggle("areFramesDeath", settings.areFramesDeath, "Are Frames Death?", groupName));
     yPosOfGroupChild += uiGap;
 
     subPage2Buttons.add(createToggle("areFramesBouncy", settings.areFramesBouncy, "Are Frames Bouncy?", groupName));
+    yPosOfGroupChild += uiGap;
+    
+    subPage2Buttons.add(createSlider("frameAngleStart", 0, 360, settings.frameAngleStart, "frame angle start", groupName));
+    yPosOfGroupChild += uiGap;
+    
+    subPage2Buttons.add(createSlider("frameAngleEnd", 0, 360, settings.frameAngleEnd, "frame angle end", groupName));
+    yPosOfGroupChild += uiGap;
 
     yPosOfGroupChild = yPosOfFirstChild;
     groupName = "floorSettingsGroup";
@@ -332,11 +339,11 @@ class CustomMapPage {
       "Death Lines With Non-Death Lines", groupName));
     yPosOfGroupChild += uiGap;
 
-    subPage3Buttons.add(createSlider("chancesForNonDLinesAndNonDLinesToConnect", 0, 1, settings.chancesForNonDLinesAndNonDLinesToConnect,
+    subPage3Buttons.add(createSlider("chancesForNonDLinesAndNonDLinesToConnect", 0, 1, settings.chancesForNonDLinesToConnect,
       "Non-Death Lines With Non-Death Lines", groupName));
     yPosOfGroupChild += uiGap;
 
-    subPage3Buttons.add(createSlider("chancesForDLinesAndDLinesToConnect", 0, 1, settings.chancesForDLinesAndDLinesToConnect,
+    subPage3Buttons.add(createSlider("chancesForDLinesAndDLinesToConnect", 0, 1, settings.chancesForDLinesToConnect,
       "Death Lines With Death Lines", groupName));
     yPosOfGroupChild += uiGap;
 
@@ -522,13 +529,13 @@ class CustomMapPage {
     subPage3Buttons.add(createToggle("sameColorForAllGLines", settings.sameColorForAllGLines, "same color for all grapple lines", groupName));
     yPosOfGroupChild += uiGap;
 
-    subPage3Buttons.add(createToggle("moveDLinesToBack", settings.moveDLinesToBack, "move Death Lines To Back", groupName));
+    subPage3Buttons.add(createToggle("areDLinesAtBack", settings.areDLinesAtBack, "Are Death Lines At Back?", groupName));
     yPosOfGroupChild += uiGap;
 
-    subPage3Buttons.add(createToggle("moveDLinesToFront", settings.moveDLinesToFront, "move Death Lines To Front", groupName));
+    subPage3Buttons.add(createToggle("areBLinesAtBack", settings.areBLinesAtBack, "Are Bouncy Lines At Back?", groupName));
     yPosOfGroupChild += uiGap;
 
-    subPage3Buttons.add(createToggle("addPhysicsLineDuplicates", settings.addNoPhysicsLineDuplicates, "add Physics Line Duplicates", groupName));
+    subPage3Buttons.add(createToggle("addPhysicsLineDuplicates", settings.addNoPhysicsLineDuplicates, "add no-Physics Line Duplicates", groupName));
     yPosOfGroupChild += uiGap;
 
     subPage3Buttons.add(createToggle("addBackground", settings.addBackground, "add Background", groupName));
@@ -546,6 +553,17 @@ class CustomMapPage {
       }
     }
   }
+
+  void updateControllerByName(String controllerName, int value) {
+    for (List<Controller> subPage : subPages) {
+      for (Controller controller : subPage) {
+        if (controller.getName().equals(controllerName)) {
+          controller.setValue(value);
+        }
+      }
+    }
+  }
+
   void updateSubPageBtnColor() {
     cp5.getController("customMapPage1Btn").setColorBackground(INACTIVE_COLOR); // Change color
     cp5.getController("customMapPage2Btn").setColorBackground(INACTIVE_COLOR); // Change color
@@ -789,8 +807,8 @@ class CustomMapPage {
     setLockAndColor("lineAngleEnd", settings.setSpecificLineAngles[0]);
     setLockAndColor("limitLineAngleAfterConnectingItsCorner",
       settings.chancesForDLinesAndNonDLinesToConnect[0] <= 0 &&
-      settings.chancesForNonDLinesAndNonDLinesToConnect[0] <= 0 &&
-      settings.chancesForDLinesAndDLinesToConnect[0] <= 0 &&
+      settings.chancesForNonDLinesToConnect[0] <= 0 &&
+      settings.chancesForDLinesToConnect[0] <= 0 &&
       settings.chancesForFloorsAndFloorsToConnect[0] <= 0 &&
       settings.chancesForNonDLinesToConnectWithFloors[0] <= 0 &&
       settings.chancesForDLinesToConnectWithFloors[0] <= 0 &&
@@ -811,6 +829,8 @@ class CustomMapPage {
     setLockAndColor("areFramesDeath", !settings.addFrames[0]);
 
     setLockAndColor("areFramesBouncy", !settings.addFrames[0]);
+    setLockAndColor("frameAngleStart", !settings.addFrames[0]);
+    setLockAndColor("frameAngleEnd", !settings.addFrames[0]);
 
     setLockAndColor("numOfFloors", !settings.addFloors[0]);
     setLockAndColor("minFloorWidth", !settings.addFloors[0]);
@@ -848,8 +868,8 @@ class CustomMapPage {
     setLockAndColor("chancesForDLinesAndFloorsToConnectAtCorner", !settings.addFloors[0] || settings.chancesOfDeath[0] <= 0 || settings.chancesForDLinesToConnectWithFloors[0] <= 0);
     setLockAndColor("chancesForFloorsToConnectAtCorner", !settings.addFloors[0] || settings.chancesForFloorsAndFloorsToConnect[0] <= 0);
     setLockAndColor("chancesForNonDLinesAndFloorsToConnectAtCorner", !settings.addFloors[0] || settings.chancesOfDeath[0] >= 1 || settings.chancesForNonDLinesToConnectWithFloors[0] <= 0);
-    setLockAndColor("chancesForDLinesToConnectAtCorner", settings.chancesOfDeath[0] <= 0 || settings.chancesForDLinesAndDLinesToConnect[0] <= 0);
-    setLockAndColor("chancesForNonDLinesToConnectAtCorner", settings.chancesOfDeath[0] >= 1 || settings.chancesForNonDLinesAndNonDLinesToConnect[0] <= 0);
+    setLockAndColor("chancesForDLinesToConnectAtCorner", settings.chancesOfDeath[0] <= 0 || settings.chancesForDLinesToConnect[0] <= 0);
+    setLockAndColor("chancesForNonDLinesToConnectAtCorner", settings.chancesOfDeath[0] >= 1 || settings.chancesForNonDLinesToConnect[0] <= 0);
     isLocked = cp5.getController("chancesForFloorsToConnectWithFrames").isLock() || settings.chancesForFloorsToConnectWithFrames[0] <= 0;
     setLockAndColor("connectFloorUp", isLocked);
     setLockAndColor("connectFloorDown", isLocked);
@@ -869,8 +889,6 @@ class CustomMapPage {
     setLockAndColor("sameColorForAllDLines", settings.chancesOfDeath[0] <= 0);
     setLockAndColor("sameColorForAllBLines", settings.chancesOfBounciness[0] <= 0);
     setLockAndColor("sameColorForAllGLines", settings.chancesOfGrapple[0] <= 0);
-    setLockAndColor("moveDLinesToBack", settings.moveDLinesToFront[0]);
-    setLockAndColor("moveDLinesToFront", settings.moveDLinesToBack[0]);
   }
   void showExportPopup() {
 

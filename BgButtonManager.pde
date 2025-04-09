@@ -20,6 +20,10 @@ class BgButtonManager {
     bgPatternLabels.add("BG Pattern 01");
     bgPatternLabels.add("BG Pattern 02");
     bgPatternLabels.add("BG Pattern 03");
+    bgPatternLabels.add("BG Pattern 04");
+    bgPatternLabels.add("BG Pattern 05");
+    bgPatternLabels.add("BG Pattern 06");
+
 
     // Create the main active background button
     activeBgButton = createActiveBgButton(currentIndex, bgPatternLabels.get(currentIndex) + " (B)");

@@ -10,12 +10,15 @@ import java.lang.reflect.Field;
 import java.awt.datatransfer.*;
 import java.awt.Toolkit;
 import java.util.concurrent.CopyOnWriteArrayList;
+import bsh.*;
 
 // For map size 9
 //float maxJumpHeight = 51.9; //The bottom-most point of player's circle when they are at max height
 //float maxSpecialJumpHeight = 124;
 //float minJumpHeight = 14.8; // Without using heavy. The bottom-most point of player's circle when they are at min height
 //float playerDiameter = 9;
+
+Interpreter bsh;
 
 String savedPresetsFolder = "saved-presets";
 
@@ -26,11 +29,11 @@ Settings settings = new Settings();
 BgButtonManager bgButtonManager;
 EditLinesManager editLinesManager;
 GenerateBtnManager generateBtnManager;
-Map<Line, Line> noPyhsicsDuplicateLineMap;
+Map<Line, Line> noPhysicsDuplicateLineMap;
 
-int numOfColorSchemesAvailable = 65;
+int numOfColorSchemesAvailable = 77;
 String currentPreset;
-int noOfLines = 0;
+int noOfLines = 1;
 boolean clearExistingLines = true;
 
 boolean isProcessingLines = false;
@@ -64,6 +67,7 @@ float spawnRadius; // Radius of the circle
 boolean isExportTextfieldOpen;
 
 ControlP5 cp5;
+ScriptManager scriptManager;
 
 void setup() {
   defaultFont = createFont("Tw Cen MT Bold", 12);
@@ -77,6 +81,8 @@ void setup() {
   uiManager = new UIManager();
   editLinesManager = new EditLinesManager();
   lineManager = new LineManager();
+
+  scriptManager = new ScriptManager();
 }
 
 void generate() {
@@ -95,14 +101,12 @@ void draw() {
   drawColorIndicator();
   editLinesManager.updateEditLineUI();
   generateBtnManager.updateGenerateButtonsUI();
-
-  setLockAndColor("defaultPresetsBtn", true); // also disabled its hotkey
 }
 
 void drawSpawn() {
   //Draw the circle if it has been placed
   if (isSpawnPlaced) {
-    spawnRadius = getSpawnSize();
+    spawnRadius = getSpawnRadius();
     fill(255, 0, 0); // Circle color
     strokeWeight(1);
     stroke(0);
@@ -113,10 +117,22 @@ void drawSpawn() {
 void drawLinesFromList() {
 
   for (Line line : lines) {
-    if (line == selectedLine) {
+    if (line == selectedLine || multiSelectedLines.contains(line)) {
       line.drawLine(true);  // Draw with an outline
     } else {
       line.drawLine(false);  // Draw normally
     }
   }
+
+  if (isSelecting) {
+    // Switch to CORNERS mode so that the rectangle is drawn using two opposite corners.
+    rectMode(CORNERS);
+    fill(0, 0, 255, 50); // Semi-transparent blue fill
+    stroke(0, 0, 255);   // Blue stroke
+    rect(selectionStart.x, selectionStart.y, selectionEnd.x, selectionEnd.y);
+    // Optionally, restore the rectMode to CORNER if your other drawing uses it:
+    rectMode(CORNER);
+  }
+  if (!isProcessingLines)
+    lineManager.moveLinesForwardOrBackward();
 }

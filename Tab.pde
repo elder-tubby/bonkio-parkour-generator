@@ -3,7 +3,7 @@ class Tab {
   Button tabButton;
   List<Controller> controllers;
   int tabIndex;
-  int btnWidth = 163;
+  int btnWidth = 164;
   int btnHeight = 40;
   int btnGap = 5;
   int initialXPos = 20;
