@@ -27,4 +27,4 @@ This is done using the parkour generator app. To use the app, you can either
 5. Scale a map up or down.
 6. Save and load presets (presets contain the values of the custom settings/factors).
 7. Copy map data of any bonk map using pkrGenerator mod and edit in generator. (Circles and polygons are not supported)
-8. (Technical) Directly edit map using code for full control. For example, you can select multiple lines and set all lines that are non-death and non-bouncy to no-jump. I'd recommend using this [ChatGPT chat](https://chatgpt.com/share/67df6b9e-b360-8006-93af-5f8523a7d46c) to figure out the commmands.
+8. (Technical) Directly edit map using code for full control. For example, you can select multiple lines and set all lines that are non-death and non-bouncy to no-jump. I've prepared this this [ChatGPT chat](https://chatgpt.com/share/67df6b9e-b360-8006-93af-5f8523a7d46c) to figure out the commmands.
