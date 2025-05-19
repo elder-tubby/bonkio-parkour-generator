@@ -36,9 +36,6 @@ void handleControlKeyActions() {
 
   if (!isControlPressed) return;
 
-  //  if (key == '4') {
-  //    handlePasteLineDataBtnClick();
-  //  }
 
   if (!isProcessingLines) {
     if (keyCode == 'P' || keyCode == 'p') {
@@ -49,8 +46,6 @@ void handleControlKeyActions() {
   if (keyCode == 'S' || keyCode == 's') {
     scriptManager.toggleVisibility();
   }
-
-  //}
 
 
   if (uiManager.activeTabIndex == 0) {
@@ -138,10 +133,15 @@ void handleLineRotation() {
   }
 
   // Rotate all lines in multiSelectedLines
-  if (multiSelectedLines.size() > 1) {
+  else if (multiSelectedLines.size() > 0) {
     for (Line line : multiSelectedLines) {
       if (keyCode == RIGHT) line.angle += 1;
       else if (keyCode == LEFT) line.angle -= 1;
+      else if (keyCode == UP) // rotate clockwise:
+        editLinesManager.rotateSelectedLinesAsGroup(1);
+      else if (keyCode == DOWN)
+        // rotate counter‑clockwise:
+        editLinesManager.rotateSelectedLinesAsGroup(-1);
     }
   }
 }
@@ -228,6 +228,7 @@ void handleProcessingLinesKeyActions() {
 
 
 void updateLinePosition(Line line) {
+  if (line.noPhysics) return;
   cp5.getController("lineDataCopiedLabel").hide();
   line.centerX = mouseX - dragOffsetX;
   line.centerY = mouseY - dragOffsetY;

@@ -149,7 +149,7 @@ class MoreOptionsPage {
 
   void createToggleScriptManagerBtn() {
     elements.add(cp5.addButton("toggleScriptManagerBtn")
-      .setPosition(xPos, startingYPos + verticalGap * 6)
+      .setPosition(xPos, startingYPos + verticalGap * 7)
       .setSize(elementWidth, elementHeight)
       .setFont(defaultFont)
       .setLabel("toggle script manager (ctrl + s)")
@@ -185,7 +185,7 @@ class MoreOptionsPage {
     if (!settings.addFloors[0])
       //lineManager.clearFloors();
       if (clearExistingLines)
-        lineManager.clearDeathLines();
+        //lineManager.clearDeathLines();
     //if (!settings.addFrames[0])
     //lineManager.clearFrames();
     if (noOfLines > 0) {
@@ -199,7 +199,11 @@ class MoreOptionsPage {
     float canvasCenterX = (startOfWidth + endOfWidth) / 2.0f;
     float canvasCenterY = (startOfHeight + endOfHeight) / 2.0f;
 
-    for (Line line : lines) {
+    List<Line> targetLines = (multiSelectedLines != null && !multiSelectedLines.isEmpty())
+      ? multiSelectedLines
+      : lines;
+
+    for (Line line : targetLines) {
       if (line.isOnlyForProgram) continue;
       // Calculate offset from the canvas center
       float offsetX = line.centerX - canvasCenterX;

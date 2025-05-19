@@ -438,6 +438,45 @@ class EditLinesManager {
     //lineManager.moveLinesForwardOrBackward();
   }
 
+  /**
+   * Rotate multiSelectedLines around their collective center by exactly deltaAngleDegrees,
+   * using double‐precision math to avoid drift even with hundreds of lines.
+   */
+  void rotateSelectedLinesAsGroup(float deltaAngleDegrees) {
+    if (multiSelectedLines == null || multiSelectedLines.isEmpty()) return;
+
+    // 1. Compute centroid in double precision
+    double sumX = 0, sumY = 0;
+    for (Line ln : multiSelectedLines) {
+      sumX += ln.centerX;
+      sumY += ln.centerY;
+    }
+    double pivotX = sumX / multiSelectedLines.size();
+    double pivotY = sumY / multiSelectedLines.size();
+
+    // 2. Precompute sin/cos of the incremental angle
+    double rad    = Math.toRadians(deltaAngleDegrees);
+    double cosVal = Math.cos(rad);
+    double sinVal = Math.sin(rad);
+
+    // 3. Rotate each line's position around the pivot, then adjust its angle
+    for (Line ln : multiSelectedLines) {
+      double dx = ln.centerX - pivotX;
+      double dy = ln.centerY - pivotY;
+
+      double newX = pivotX + dx * cosVal - dy * sinVal;
+      double newY = pivotY + dx * sinVal + dy * cosVal;
+      ln.centerX = (float) newX;
+      ln.centerY = (float) newY;
+
+      // Increment the stored angle and wrap into [0, 360)
+      float newAngle = (ln.angle + deltaAngleDegrees) % 360f;
+      if (newAngle < 0) newAngle += 360f;
+      ln.angle = newAngle;
+    }
+  }
+
+
 
   void handleSpawnBtnClick() {
 
@@ -463,6 +502,8 @@ class EditLinesManager {
         spawnPosition.set(mouseX, mouseY);
     }
   }
+
+
 
   void handleCopyLineDataBtnClick() {
     selectedLine = null;

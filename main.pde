@@ -133,6 +133,7 @@ void drawLinesFromList() {
     // Optionally, restore the rectMode to CORNER if your other drawing uses it:
     rectMode(CORNER);
   }
-  if (!isProcessingLines)
-    lineManager.moveLinesForwardOrBackward();
+
+  //if (!isProcessingLines)
+    //lineManager.moveLinesForwardOrBackward();
 }

@@ -177,18 +177,15 @@ class Settings {
     // Handle different array types
     if (array instanceof float[]) {
 
-      println("array is instance of float");
       for (float value : (float[]) array) {
         jsonArray.append(value);
       }
     } else if (array instanceof boolean[]) {
 
-      println("array is instance of boolean");
       for (boolean value : (boolean[]) array) {
         jsonArray.append(value);
       }
     } else if (array instanceof ArrayList) {
-      println("array is instance of ArrayList");
       for (Object value : (ArrayList<?>) array) {
         if (value instanceof Float) {
           jsonArray.append((Float) value);

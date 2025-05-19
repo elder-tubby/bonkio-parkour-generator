@@ -12,7 +12,7 @@ color adjustBrightness(color original, float adjustment) {
   return color(r, g, b);
 }
 
-color getRandomColor(int scheme) {
+  color getRandomColor(int scheme) {
   color lineColor;
 
   switch (scheme) {

@@ -20,6 +20,7 @@ class LineManager implements Runnable {
     setRandomValues();
     isFloorsGenerationComplete = false;
     lines = new CopyOnWriteArrayList<Line>();
+    noPhysicsDuplicateLineMap = new HashMap<>();
 
     createFrameForProgram();
     if (settings.addFrames[0]) createFrames();
@@ -155,16 +156,108 @@ class LineManager implements Runnable {
 
 
   void createDeathFromPathAsync(boolean isDeathOnPath) {
+    Thread thread;
+    if (isDeathOnPath) {
+      thread = new Thread(() -> createLinesFromDrawing());
+    } else {
 
-    //Thread thread = new Thread(() -> createDeathFromPath(isDeathOnPath));
-    Thread thread = new Thread(() -> createDeathAroundPlayerX());
-
+      thread = new Thread(() -> createDeathFromPath(isDeathOnPath));
+      //Thread thread = new Thread(() -> createDeathAroundPlayerX());
+    }
     thread.start();
+  }
+  void createLinesFromDrawing() {
+    isProcessingLines = true;
+    println("Starting line generation in createLinesFromDrawing");
+
+    // Get the clipboard data
+    String clipboardData = getClipboardString();
+    if (clipboardData == null || clipboardData.isEmpty()) {
+      println("Clipboard is empty or contains non-text data.");
+      return;
+    }
+
+    // Parse the clipboard data into a JSONArray
+    JSONArray jsonData = parseJSONArray(clipboardData);
+    if (jsonData == null) {
+      println("Failed to parse JSON data.");
+      return;
+    }
+
+    // Clear existing lines if needed
+    //lines.clear();
+
+    // Iterate over each JSON object and create a new Line instance
+    for (int i = 0; i < jsonData.size(); i++) {
+      JSONObject inst = jsonData.getJSONObject(i);
+
+      // Initialize variables with default values
+      float x = 0, y = 0, w = 0, h = 0, a = 0;
+
+      if (inst != null) {
+        // Safely get "x" and "y"
+        if (inst.hasKey("x") && !inst.isNull("x")) {
+          x = inst.getFloat("x");
+        } else {
+          println("Warning: 'x' is missing or null in JSON object " + i);
+        }
+
+        if (inst.hasKey("y") && !inst.isNull("y")) {
+          y = inst.getFloat("y");
+        } else {
+          println("Warning: 'y' is missing or null in JSON object " + i);
+        }
+
+        float halfMapWidth = (endOfWidth - startOfWidth) / 2.0f;
+        float halfMapHeight = (endOfHeight - startOfHeight) / 2.0f;
+
+        float newPosX = x + startOfWidth + halfMapWidth;
+        float newPosY = y + startOfHeight + halfMapHeight;
+
+        // Safely get "width", "height", and "angle"
+        if (inst.hasKey("width") && !inst.isNull("width")) {
+          w = inst.getFloat("width");
+        } else {
+          println("Warning: 'width' is missing or null in JSON object " + i);
+        }
+
+        if (inst.hasKey("height") && !inst.isNull("height")) {
+          h = inst.getFloat("height");
+        } else {
+          println("Warning: 'height' is missing or null in JSON object " + i);
+        }
+
+        if (inst.hasKey("angle") && !inst.isNull("angle")) {
+          a = inst.getFloat("angle");
+        } else {
+          println("Warning: 'angle' is missing or null in JSON object " + i);
+        }
+
+
+        // Create a new Line with death set to false
+        Line newLine = new Line(newPosX, newPosY, w, h, a, false);
+        lines.add(newLine);
+      } else {
+        println("Warning: JSONObject at index " + i + " is null.");
+      }
+    }
+
+    // Continue with further processing
+    moveLinesForwardOrBackward();
+    if (settings.addNoPhysicsLineDuplicates[0]) {
+      removeNoPhysicsDuplicatesFromLines();
+      duplicateAndScaleDownLines(lines);
+    }
+    if (!settings.addFrames[0]) extendLinesAboveRoof(findLinesCrossingYEqualsZero(lines));
+    removeDuplicateLines();
+
+    isProcessingLines = false;
+    println("Generation of lines from drawing complete.");
   }
 
   void createDeathFromPath(boolean isDeathOnPath) {
     isProcessingLines = true;
-    println("Starting death line generation...");
+    println("Starting death line generation in createDeathFromPath. isDeathOnPath: " + isDeathOnPath);
 
     // Get the clipboard data
     String clipboardData = getClipboardString();
@@ -185,11 +278,11 @@ class LineManager implements Runnable {
     ArrayList<Line> deathLines = new ArrayList<>();
 
     float boxSize = 2;
-    float boxWidth = 2;
+    float boxWidth = 15;
     float necessaryGapNotSureWhyItsNeeded = 8;
     float minPossibleGap = getSpawnRadius() * 2 + boxSize + necessaryGapNotSureWhyItsNeeded;
     int skipPoints = 1; // Skip every 20 points to reduce lag
-    minPossibleGap = 2;
+    //minPossibleGap = 20;
 
 
     for (int i = 0; i < convertedPoints.size() - skipPoints && isProcessingLines; i += skipPoints) {
@@ -215,12 +308,12 @@ class LineManager implements Runnable {
       Line rightDeath = new Line(deathRight.x, deathRight.y, boxWidth, boxSize, angle, true);
       if (!isDeathOnPath) {
         // Ensure valid placement
-        if (isValidDeathLineAroundPath(leftDeath, convertedPoints, deathLines, pathTightness)) {
+        if (isValidDeathLineAroundPath(leftDeath, convertedPoints, deathLines)) {
           deathLines.add(leftDeath);
           lines.add(leftDeath);
         };
 
-        if (isValidDeathLineAroundPath(rightDeath, convertedPoints, deathLines, pathTightness)) {
+        if (isValidDeathLineAroundPath(rightDeath, convertedPoints, deathLines)) {
           deathLines.add(rightDeath);
           lines.add(rightDeath);
         }
@@ -245,12 +338,12 @@ class LineManager implements Runnable {
     println("Death line generation complete.");
   }
 
-  boolean isValidDeathLineAroundPath(Line newLine, ArrayList<PVector> points, ArrayList<Line> existingDeathLines, float pathTightness) {
+  boolean isValidDeathLineAroundPath(Line newLine, ArrayList<PVector> points, ArrayList<Line> existingDeathLines) {
     for (PVector point : points) {
       if (
         isPointInLine(newLine, point)
         ||
-        distanceBetweenPointAndLine(newLine, point) < getSpawnRadius()
+        distanceBetweenPointAndLine(newLine, point) < getSpawnRadius() * 2
         //distanceBetweenPointAndLine(newLine, point) < pathTightness / 5
         ) {
         return false;
@@ -534,9 +627,8 @@ class LineManager implements Runnable {
           // Merge: Increase width instead of adding a new box
           currentLine.width += boxSize + spacing;
           currentLine.centerX += (boxSize + spacing) / 2;
-          println("in if of row " + i);
         } else {
-          println("in else of row " + i);
+          //println("in else of row " + i);
           // Not adjacent: Save the current merged box and start a new one
           mergedRow.add(currentLine);
           currentLine = nextLine;
@@ -1217,13 +1309,11 @@ class LineManager implements Runnable {
         }
       } else if (!lineToMove.isFloor && !lineToConnectWith.isFrame) {
 
-
         if (connectNonDLinesAndDlines(lineToConnectWith, lineToMove)) { // lineToMove is either death or non-death
 
           return lineToConnectWith;
         }
 
-        //
 
         if (lineToMove.isDeath) {
 
@@ -1240,10 +1330,11 @@ class LineManager implements Runnable {
             return lineToConnectWith;
           }
 
-          if (lineToConnectWith.isDeath && random(1) < settings.chancesForNonDLinesToConnect[0]) {
+          if (!lineToConnectWith.isDeath && random(1) < settings.chancesForNonDLinesToConnect[0]) {
             return lineToConnectWith;
           }
         }
+
 
         //
 
@@ -2025,10 +2116,13 @@ class LineManager implements Runnable {
   }
 
   void bgPatternNestedSquares() {
-    int numLayers = (int)random(3, 6); // Number of nested square layers
-    float maxSize = random (900, 1000);
+    int numLayers = (int)random(10, 30); // Number of nested square layers
+    float maxSize = random (1100, 1400);
     float centerX = (startOfWidth + endOfWidth) / 2;
     float centerY = (startOfHeight + endOfHeight) / 2;
+
+    centerX = random(startOfWidth, endOfWidth);
+    centerY = random (startOfHeight, endOfHeight);
 
     color lineColor;
     int[] specificSchemes = new int[]{};
@@ -2042,10 +2136,10 @@ class LineManager implements Runnable {
     } else {
       scheme = (int)random(numOfColorSchemesAvailable); // Assuming getRandomColor has 53 cases
     }
-
+    float angle = random(0, 360);
     for (int l = 1; l <= numLayers; l++) {
       float size = maxSize * (1 - (float)l / (numLayers + 1));
-      float angle = random(0, 360); // Align squares or rotate for variation
+      if (l == 1) size = 1500;  
 
       Line squareLine = new Line(centerX, centerY, size, size, angle, false);
 
@@ -2117,11 +2211,15 @@ class LineManager implements Runnable {
       Line duplicateLine = entry.getValue();
       lines.remove(duplicateLine);
     }
+    for (Line line : lines) { // this is useful if let's say a map pasted from bonk io has its own noPhysics shapes.
+      if (line.noPhysics && !line.isBgLine && !line.isOnlyForProgram)
+        lines.remove(line);
+    }
   }
 
 
   void updateNoPhysicsPlatsColor() {
-    if (!settings.addNoPhysicsLineDuplicates[0] || noPhysicsDuplicateLineMap == null || noPhysicsDuplicateLineMap.isEmpty())  return;
+    if (!settings.addNoPhysicsLineDuplicates[0] || noPhysicsDuplicateLineMap == null)  return;
     removeNoPhysicsDuplicatesFromLines();
     duplicateAndScaleDownLines(lines);
 
