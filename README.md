@@ -10,7 +10,7 @@ To generate parkour maps on bonk.io, you'll need to
 
 This is done using the parkour generator app. To use the app, you can either
 
-- Run the ```.exe``` file by downloading the `.rar` file from [here](https://github.com/elder-tubby/bonkio-parkour-generator/releases/latest) <sub>[Recommended way for stable version]</sub>
+- **[IGNORE FOR NOW]**Run the ```.exe``` file by downloading the `.rar` file from [here](https://github.com/elder-tubby/bonkio-parkour-generator/releases/latest) <sub>[Recommended way for stable version]</sub> 
 - Or execute the source code using the [Processing IDE](https://processing.org/download). <sub>[Not recommended since the code is updated regularly and you might run into some unfinished features]</sub>
 
 **2. Convert that map data to bonk.io maps**
