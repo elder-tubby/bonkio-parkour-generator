@@ -22,7 +22,7 @@ This is done using the parkour generator app. To use the app, you can either
 
 This is how everything should look like: [YouTube demo](https://www.youtube.com/watch?v=I0Nrr0XmPMA). If it doesn't, make sure you have JDK 17 installed. Or feel free to message me.
 
-## Features.
+## Features:
 1. Randomly generate maps based on custom factors (such as _chances of lines connecting_, _minimum distance between lines_, etc.)
 2. Easily edit maps using mouse, sliders, and keyboard shortcuts.
 3. Randomly assign colors to plats based on plat type and choose random background patterns.
