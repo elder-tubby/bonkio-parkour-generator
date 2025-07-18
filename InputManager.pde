@@ -138,10 +138,10 @@ void handleLineRotation() {
       if (keyCode == RIGHT) line.angle += 1;
       else if (keyCode == LEFT) line.angle -= 1;
       else if (keyCode == UP) // rotate clockwise:
-        editLinesManager.rotateSelectedLinesAsGroup(1);
+        editLinesManager.rotateSelectedLinesAsGroup(0.1);
       else if (keyCode == DOWN)
         // rotate counter‑clockwise:
-        editLinesManager.rotateSelectedLinesAsGroup(-1);
+        editLinesManager.rotateSelectedLinesAsGroup(-0.1);
     }
   }
 }

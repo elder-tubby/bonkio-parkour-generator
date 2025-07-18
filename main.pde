@@ -18,6 +18,8 @@ import bsh.*;
 //float minJumpHeight = 14.8; // Without using heavy. The bottom-most point of player's circle when they are at min height
 //float playerDiameter = 9;
 
+String version = "0.1.1";
+
 Interpreter bsh;
 
 String savedPresetsFolder = "saved-presets";
@@ -33,7 +35,7 @@ Map<Line, Line> noPhysicsDuplicateLineMap;
 
 int numOfColorSchemesAvailable = 77;
 String currentPreset;
-int noOfLines = 1;
+int noOfLines = 30;
 boolean clearExistingLines = true;
 
 boolean isProcessingLines = false;
@@ -70,12 +72,17 @@ ControlP5 cp5;
 ScriptManager scriptManager;
 
 void setup() {
+
+
+
   defaultFont = createFont("Tw Cen MT Bold", 12);
   tabFont = createFont("Tw Cen MT Bold", 11);
   size(1310, 710);
   cp5 = new ControlP5(this);
 
-  currentPreset = "temp"; // in case save presets is clicked before importing any preset
+
+  currentPreset = "do not delete - default " + int(random(1, 7));
+ 
   settings.importPreset(currentPreset, false);
   generateBtnManager = new GenerateBtnManager();
   uiManager = new UIManager();
@@ -135,5 +142,5 @@ void drawLinesFromList() {
   }
 
   //if (!isProcessingLines)
-    //lineManager.moveLinesForwardOrBackward();
+  //lineManager.moveLinesForwardOrBackward();
 }

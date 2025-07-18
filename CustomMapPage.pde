@@ -923,7 +923,7 @@ class CustomMapPage {
       .setColorActive(color(255, 255, 255))
       .setColorForeground(color(0, 0, 0));
 
-    if (currentPreset != "default")
+    if (!currentPreset.contains("do not delete - default"))
       presetNameField.setText(currentPreset);
 
     presetNameField.onChange(new CallbackListener() {

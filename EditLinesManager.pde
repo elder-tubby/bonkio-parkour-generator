@@ -537,7 +537,7 @@ class EditLinesManager {
     multiSelectionLabel = cp5.addTextlabel("multiSelectionLabel")
       .setPosition(startXPos + 50, startYPos + 4)
       .setFont(defaultFont)
-      .setText("WIDTH:          CTRL + L/R\n\nHEIGHT:         CTRL + U/D\n\nANGLE:          SHIFT + L/R");
+      .setText("WIDTH:          CTRL + L/R\n\nHEIGHT:         CTRL + U/D\n\nANGLE:          SHIFT + L/R/U/D");
   }
 
   void hideMultiSelectionText() {

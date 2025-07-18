@@ -8,15 +8,18 @@ class MoreOptionsPage {
   int elementWidth = 400;
   int elementHeight = 30;
 
+  int uiIndexInColumn;
+
   MoreOptionsPage() {
 
     initialize();
   }
 
   List<Controller> initialize() {
+    uiIndexInColumn = 0;
     createDeathAroundPathButton();
     createPathTightnessSlider();
-    createDeathOnPathButton();
+    //createDeathOnPathButton();
     createClearLinesToggle();
     createSettingsRandomizerBtn();
     createExchangeBAndDLinesBtn();
@@ -26,9 +29,11 @@ class MoreOptionsPage {
   }
 
   void createDeathAroundPathButton() {
+    
+    println("uiIndexInColumn " + uiIndexInColumn);
 
     elements.add(cp5.addButton("deathAroundPathButton")
-      .setPosition(xPos, startingYPos + verticalGap * 0)
+      .setPosition(xPos, startingYPos + verticalGap * uiIndexInColumn)
       .setLabel("create death around copied player path (x)")
       .setFont(defaultFont)
       .setSize(elementWidth, elementHeight)
@@ -38,11 +43,12 @@ class MoreOptionsPage {
       }
     }
     ));
+    uiIndexInColumn++;
   }
 
   void createPathTightnessSlider() {
     Slider slider = cp5.addSlider("pathTightnessslider")
-      .setPosition(xPos, startingYPos + verticalGap * 1)
+      .setPosition(xPos, startingYPos + verticalGap * uiIndexInColumn)
       .setRange(0, 200)
       .setValue(settings.pathTightness[0])
       .setFont(defaultFont)
@@ -56,14 +62,15 @@ class MoreOptionsPage {
       .align(ControlP5.CENTER, ControlP5.CENTER);
     //slider.getCaptionLabel().align(ControlP5.RIGHT_OUTSIDE, ControlP5.CENTER).setPaddingX(10);
     elements.add(slider);
+    uiIndexInColumn++;
   }
 
 
   void createDeathOnPathButton() {
 
     elements.add(cp5.addButton("deathOnPathButton")
-      .setPosition(xPos, startingYPos + verticalGap * 2)
-      .setLabel("create death on copied player path")
+      .setPosition(xPos, startingYPos + verticalGap * uiIndexInColumn)
+      .setLabel("create lines on copied player path")
       .setFont(defaultFont)
       .setSize(elementWidth, elementHeight)
       .onClick(new CallbackListener() {
@@ -72,11 +79,12 @@ class MoreOptionsPage {
       }
     }
     ));
+    uiIndexInColumn++;
   }
 
   void createClearLinesToggle() {
     Toggle toggle = cp5.addToggle("clearExistingLinesToggle")
-      .setPosition(xPos, startingYPos + verticalGap * 3)
+      .setPosition(xPos, startingYPos + verticalGap * uiIndexInColumn)
       .setValue(clearExistingLines)
       .setLabel("clear existing lines when generating new ones")
       .setFont(defaultFont)
@@ -88,12 +96,13 @@ class MoreOptionsPage {
     toggle.getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER).setPaddingX(10);
 
     elements.add(toggle);
+    uiIndexInColumn++;
   }
 
   void createSettingsRandomizerBtn() {
 
     elements.add(cp5.addButton("settingsRandomizerBtn")
-      .setPosition(xPos, startingYPos + verticalGap * 4)
+      .setPosition(xPos, startingYPos + verticalGap * uiIndexInColumn)
       .setLabel("set random values for all settings")
       .setFont(defaultFont)
       .setSize(elementWidth, elementHeight)
@@ -103,11 +112,12 @@ class MoreOptionsPage {
       }
     }
     ));
+    uiIndexInColumn++;
   }
 
   void createExchangeBAndDLinesBtn() {
     elements.add(cp5.addButton("exchangeBAndDLinesBtn")
-      .setPosition(xPos, startingYPos + verticalGap * 5)
+      .setPosition(xPos, startingYPos + verticalGap * uiIndexInColumn)
       .setSize(elementWidth, elementHeight)
       .setFont(defaultFont)
       .setLabel("exchange B And D Lines")
@@ -117,12 +127,13 @@ class MoreOptionsPage {
       }
     }
     ));
+    uiIndexInColumn++;
   }
 
   void createZoomBtns() {
 
     elements.add(cp5.addButton("zoomInBtn")
-      .setPosition(xPos, startingYPos + verticalGap * 6)
+      .setPosition(xPos, startingYPos + verticalGap * uiIndexInColumn)
       .setLabel("zoom in 1.25x")
       .setFont(defaultFont)
       .setSize(elementWidth / 2 - 20, elementHeight)
@@ -135,7 +146,7 @@ class MoreOptionsPage {
 
 
     elements.add(cp5.addButton("zoomOutBtn")
-      .setPosition(xPos + 220, startingYPos + verticalGap * 6)
+      .setPosition(xPos + 220, startingYPos + verticalGap * uiIndexInColumn)
       .setLabel("zoom Out 0.8x")
       .setFont(defaultFont)
       .setSize(elementWidth / 2 - 20, elementHeight)
@@ -145,11 +156,12 @@ class MoreOptionsPage {
       }
     }
     ));
+    uiIndexInColumn++;
   }
 
   void createToggleScriptManagerBtn() {
     elements.add(cp5.addButton("toggleScriptManagerBtn")
-      .setPosition(xPos, startingYPos + verticalGap * 7)
+      .setPosition(xPos, startingYPos + verticalGap * uiIndexInColumn)
       .setSize(elementWidth, elementHeight)
       .setFont(defaultFont)
       .setLabel("toggle script manager (ctrl + s)")
@@ -159,6 +171,7 @@ class MoreOptionsPage {
       }
     }
     ));
+    uiIndexInColumn++;
   }
 
   void exchangeBAndDLines() {
@@ -182,10 +195,11 @@ class MoreOptionsPage {
 
   void handleCreateDeathFromPathClick(boolean isDeathOnPath) {
 
-    if (!settings.addFloors[0])
+    if (!settings.addFloors[0]) {
       //lineManager.clearFloors();
-      if (clearExistingLines)
-        //lineManager.clearDeathLines();
+    }
+    if (clearExistingLines)
+      lineManager.clearDeathLines();
     //if (!settings.addFrames[0])
     //lineManager.clearFrames();
     if (noOfLines > 0) {

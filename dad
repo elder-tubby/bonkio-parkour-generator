@@ -1,0 +1,796 @@
+[1mdiff --git a/CopyPasteDataManager.pde b/CopyPasteDataManager.pde[m
+[1mindex df735f6..30ddfe9 100644[m
+[1m--- a/CopyPasteDataManager.pde[m
+[1m+++ b/CopyPasteDataManager.pde[m
+[36m@@ -277,7 +277,6 @@[m [mvoid handlePasteLineDataBtnClick() {[m
+ [m
+   matchProgramColorsToPastedDataColors();[m
+   lineManager.moveLinesForwardOrBackward();[m
+[31m-  lineManager.updateNoPhysicsPlatsColor();[m
+ [m
+   // Optional: Provide feedback to the user that the lines were pasted and processed[m
+   println("Lines have been successfully pasted and added!");[m
+[1mdiff --git a/EditLinesManager.pde b/EditLinesManager.pde[m
+[1mindex 3dec1a0..66002d1 100644[m
+[1m--- a/EditLinesManager.pde[m
+[1m+++ b/EditLinesManager.pde[m
+[36m@@ -438,45 +438,6 @@[m [mclass EditLinesManager {[m
+     //lineManager.moveLinesForwardOrBackward();[m
+   }[m
+ [m
+[31m-  /**[m
+[31m-   * Rotate multiSelectedLines around their collective center by exactly deltaAngleDegrees,[m
+[31m-   * using double‐precision math to avoid drift even with hundreds of lines.[m
+[31m-   */[m
+[31m-  void rotateSelectedLinesAsGroup(float deltaAngleDegrees) {[m
+[31m-    if (multiSelectedLines == null || multiSelectedLines.isEmpty()) return;[m
+[31m-[m
+[31m-    // 1. Compute centroid in double precision[m
+[31m-    double sumX = 0, sumY = 0;[m
+[31m-    for (Line ln : multiSelectedLines) {[m
+[31m-      sumX += ln.centerX;[m
+[31m-      sumY += ln.centerY;[m
+[31m-    }[m
+[31m-    double pivotX = sumX / multiSelectedLines.size();[m
+[31m-    double pivotY = sumY / multiSelectedLines.size();[m
+[31m-[m
+[31m-    // 2. Precompute sin/cos of the incremental angle[m
+[31m-    double rad    = Math.toRadians(deltaAngleDegrees);[m
+[31m-    double cosVal = Math.cos(rad);[m
+[31m-    double sinVal = Math.sin(rad);[m
+[31m-[m
+[31m-    // 3. Rotate each line's position around the pivot, then adjust its angle[m
+[31m-    for (Line ln : multiSelectedLines) {[m
+[31m-      double dx = ln.centerX - pivotX;[m
+[31m-      double dy = ln.centerY - pivotY;[m
+[31m-[m
+[31m-      double newX = pivotX + dx * cosVal - dy * sinVal;[m
+[31m-      double newY = pivotY + dx * sinVal + dy * cosVal;[m
+[31m-      ln.centerX = (float) newX;[m
+[31m-      ln.centerY = (float) newY;[m
+[31m-[m
+[31m-      // Increment the stored angle and wrap into [0, 360)[m
+[31m-      float newAngle = (ln.angle + deltaAngleDegrees) % 360f;[m
+[31m-      if (newAngle < 0) newAngle += 360f;[m
+[31m-      ln.angle = newAngle;[m
+[31m-    }[m
+[31m-  }[m
+[31m-[m
+[31m-[m
+ [m
+   void handleSpawnBtnClick() {[m
+ [m
+[36m@@ -503,8 +464,6 @@[m [mclass EditLinesManager {[m
+     }[m
+   }[m
+ [m
+[31m-[m
+[31m-[m
+   void handleCopyLineDataBtnClick() {[m
+     selectedLine = null;[m
+     lineManager.moveLinesForwardOrBackward();[m
+[1mdiff --git a/HelperFunctions.pde b/HelperFunctions.pde[m
+[1mindex 647ea1a..87b209f 100644[m
+[1m--- a/HelperFunctions.pde[m
+[1m+++ b/HelperFunctions.pde[m
+[36m@@ -12,7 +12,7 @@[m [mcolor adjustBrightness(color original, float adjustment) {[m
+   return color(r, g, b);[m
+ }[m
+ [m
+[31m-  color getRandomColor(int scheme) {[m
+[32m+[m[32mcolor getRandomColor(int scheme) {[m
+   color lineColor;[m
+ [m
+   switch (scheme) {[m
+[1mdiff --git a/InputManager.pde b/InputManager.pde[m
+[1mindex dcf5ac7..40c46c2 100644[m
+[1m--- a/InputManager.pde[m
+[1m+++ b/InputManager.pde[m
+[36m@@ -36,6 +36,9 @@[m [mvoid handleControlKeyActions() {[m
+ [m
+   if (!isControlPressed) return;[m
+ [m
+[32m+[m[32m  //  if (key == '4') {[m
+[32m+[m[32m  //    handlePasteLineDataBtnClick();[m
+[32m+[m[32m  //  }[m
+ [m
+   if (!isProcessingLines) {[m
+     if (keyCode == 'P' || keyCode == 'p') {[m
+[36m@@ -47,6 +50,8 @@[m [mvoid handleControlKeyActions() {[m
+     scriptManager.toggleVisibility();[m
+   }[m
+ [m
+[32m+[m[32m  //}[m
+[32m+[m
+ [m
+   if (uiManager.activeTabIndex == 0) {[m
+     if (key == '1') uiManager.customMapPage.setActiveSubPage(1);[m
+[36m@@ -133,15 +138,10 @@[m [mvoid handleLineRotation() {[m
+   }[m
+ [m
+   // Rotate all lines in multiSelectedLines[m
+[31m-  else if (multiSelectedLines.size() > 0) {[m
+[32m+[m[32m  if (multiSelectedLines.size() > 1) {[m
+     for (Line line : multiSelectedLines) {[m
+       if (keyCode == RIGHT) line.angle += 1;[m
+       else if (keyCode == LEFT) line.angle -= 1;[m
+[31m-      else if (keyCode == UP) // rotate clockwise:[m
+[31m-        editLinesManager.rotateSelectedLinesAsGroup(1);[m
+[31m-      else if (keyCode == DOWN)[m
+[31m-        // rotate counter‑clockwise:[m
+[31m-        editLinesManager.rotateSelectedLinesAsGroup(-1);[m
+     }[m
+   }[m
+ }[m
+[36m@@ -228,7 +228,6 @@[m [mvoid handleProcessingLinesKeyActions() {[m
+ [m
+ [m
+ void updateLinePosition(Line line) {[m
+[31m-  if (line.noPhysics) return;[m
+   cp5.getController("lineDataCopiedLabel").hide();[m
+   line.centerX = mouseX - dragOffsetX;[m
+   line.centerY = mouseY - dragOffsetY;[m
+[1mdiff --git a/LineManager.pde b/LineManager.pde[m
+[1mindex ab8b01d..d7d1c97 100644[m
+[1m--- a/LineManager.pde[m
+[1m+++ b/LineManager.pde[m
+[36m@@ -20,7 +20,6 @@[m [mclass LineManager implements Runnable {[m
+     setRandomValues();[m
+     isFloorsGenerationComplete = false;[m
+     lines = new CopyOnWriteArrayList<Line>();[m
+[31m-    noPhysicsDuplicateLineMap = new HashMap<>();[m
+ [m
+     createFrameForProgram();[m
+     if (settings.addFrames[0]) createFrames();[m
+[36m@@ -156,108 +155,16 @@[m [mclass LineManager implements Runnable {[m
+ [m
+ [m
+   void createDeathFromPathAsync(boolean isDeathOnPath) {[m
+[31m-    Thread thread;[m
+[31m-    if (isDeathOnPath) {[m
+[31m-      thread = new Thread(() -> createLinesFromDrawing());[m
+[31m-    } else {[m
+[31m-[m
+[31m-      thread = new Thread(() -> createDeathFromPath(isDeathOnPath));[m
+[31m-      //Thread thread = new Thread(() -> createDeathAroundPlayerX());[m
+[31m-    }[m
+[31m-    thread.start();[m
+[31m-  }[m
+[31m-  void createLinesFromDrawing() {[m
+[31m-    isProcessingLines = true;[m
+[31m-    println("Starting line generation in createLinesFromDrawing");[m
+[31m-[m
+[31m-    // Get the clipboard data[m
+[31m-    String clipboardData = getClipboardString();[m
+[31m-    if (clipboardData == null || clipboardData.isEmpty()) {[m
+[31m-      println("Clipboard is empty or contains non-text data.");[m
+[31m-      return;[m
+[31m-    }[m
+[31m-[m
+[31m-    // Parse the clipboard data into a JSONArray[m
+[31m-    JSONArray jsonData = parseJSONArray(clipboardData);[m
+[31m-    if (jsonData == null) {[m
+[31m-      println("Failed to parse JSON data.");[m
+[31m-      return;[m
+[31m-    }[m
+[31m-[m
+[31m-    // Clear existing lines if needed[m
+[31m-    //lines.clear();[m
+[31m-[m
+[31m-    // Iterate over each JSON object and create a new Line instance[m
+[31m-    for (int i = 0; i < jsonData.size(); i++) {[m
+[31m-      JSONObject inst = jsonData.getJSONObject(i);[m
+[31m-[m
+[31m-      // Initialize variables with default values[m
+[31m-      float x = 0, y = 0, w = 0, h = 0, a = 0;[m
+[31m-[m
+[31m-      if (inst != null) {[m
+[31m-        // Safely get "x" and "y"[m
+[31m-        if (inst.hasKey("x") && !inst.isNull("x")) {[m
+[31m-          x = inst.getFloat("x");[m
+[31m-        } else {[m
+[31m-          println("Warning: 'x' is missing or null in JSON object " + i);[m
+[31m-        }[m
+[31m-[m
+[31m-        if (inst.hasKey("y") && !inst.isNull("y")) {[m
+[31m-          y = inst.getFloat("y");[m
+[31m-        } else {[m
+[31m-          println("Warning: 'y' is missing or null in JSON object " + i);[m
+[31m-        }[m
+[31m-[m
+[31m-        float halfMapWidth = (endOfWidth - startOfWidth) / 2.0f;[m
+[31m-        float halfMapHeight = (endOfHeight - startOfHeight) / 2.0f;[m
+ [m
+[31m-        float newPosX = x + startOfWidth + halfMapWidth;[m
+[31m-        float newPosY = y + startOfHeight + halfMapHeight;[m
+[32m+[m[32m    //Thread thread = new Thread(() -> createDeathFromPath(isDeathOnPath));[m
+[32m+[m[32m    Thread thread = new Thread(() -> createDeathAroundPlayerX());[m
+ [m
+[31m-        // Safely get "width", "height", and "angle"[m
+[31m-        if (inst.hasKey("width") && !inst.isNull("width")) {[m
+[31m-          w = inst.getFloat("width");[m
+[31m-        } else {[m
+[31m-          println("Warning: 'width' is missing or null in JSON object " + i);[m
+[31m-        }[m
+[31m-[m
+[31m-        if (inst.hasKey("height") && !inst.isNull("height")) {[m
+[31m-          h = inst.getFloat("height");[m
+[31m-        } else {[m
+[31m-          println("Warning: 'height' is missing or null in JSON object " + i);[m
+[31m-        }[m
+[31m-[m
+[31m-        if (inst.hasKey("angle") && !inst.isNull("angle")) {[m
+[31m-          a = inst.getFloat("angle");[m
+[31m-        } else {[m
+[31m-          println("Warning: 'angle' is missing or null in JSON object " + i);[m
+[31m-        }[m
+[31m-[m
+[31m-[m
+[31m-        // Create a new Line with death set to false[m
+[31m-        Line newLine = new Line(newPosX, newPosY, w, h, a, false);[m
+[31m-        lines.add(newLine);[m
+[31m-      } else {[m
+[31m-        println("Warning: JSONObject at index " + i + " is null.");[m
+[31m-      }[m
+[31m-    }[m
+[31m-[m
+[31m-    // Continue with further processing[m
+[31m-    moveLinesForwardOrBackward();[m
+[31m-    if (settings.addNoPhysicsLineDuplicates[0]) {[m
+[31m-      removeNoPhysicsDuplicatesFromLines();[m
+[31m-      duplicateAndScaleDownLines(lines);[m
+[31m-    }[m
+[31m-    if (!settings.addFrames[0]) extendLinesAboveRoof(findLinesCrossingYEqualsZero(lines));[m
+[31m-    removeDuplicateLines();[m
+[31m-[m
+[31m-    isProcessingLines = false;[m
+[31m-    println("Generation of lines from drawing complete.");[m
+[32m+[m[32m    thread.start();[m
+   }[m
+ [m
+   void createDeathFromPath(boolean isDeathOnPath) {[m
+     isProcessingLines = true;[m
+[31m-    println("Starting death line generation in createDeathFromPath. isDeathOnPath: " + isDeathOnPath);[m
+[32m+[m[32m    println("Starting death line generation...");[m
+ [m
+     // Get the clipboard data[m
+     String clipboardData = getClipboardString();[m
+[36m@@ -278,11 +185,11 @@[m [mclass LineManager implements Runnable {[m
+     ArrayList<Line> deathLines = new ArrayList<>();[m
+ [m
+     float boxSize = 2;[m
+[31m-    float boxWidth = 15;[m
+[32m+[m[32m    float boxWidth = 2;[m
+     float necessaryGapNotSureWhyItsNeeded = 8;[m
+     float minPossibleGap = getSpawnRadius() * 2 + boxSize + necessaryGapNotSureWhyItsNeeded;[m
+     int skipPoints = 1; // Skip every 20 points to reduce lag[m
+[31m-    //minPossibleGap = 20;[m
+[32m+[m[32m    minPossibleGap = 2;[m
+ [m
+ [m
+     for (int i = 0; i < convertedPoints.size() - skipPoints && isProcessingLines; i += skipPoints) {[m
+[36m@@ -308,12 +215,12 @@[m [mclass LineManager implements Runnable {[m
+       Line rightDeath = new Line(deathRight.x, deathRight.y, boxWidth, boxSize, angle, true);[m
+       if (!isDeathOnPath) {[m
+         // Ensure valid placement[m
+[31m-        if (isValidDeathLineAroundPath(leftDeath, convertedPoints, deathLines)) {[m
+[32m+[m[32m        if (isValidDeathLineAroundPath(leftDeath, convertedPoints, deathLines, pathTightness)) {[m
+           deathLines.add(leftDeath);[m
+           lines.add(leftDeath);[m
+         };[m
+ [m
+[31m-        if (isValidDeathLineAroundPath(rightDeath, convertedPoints, deathLines)) {[m
+[32m+[m[32m        if (isValidDeathLineAroundPath(rightDeath, convertedPoints, deathLines, pathTightness)) {[m
+           deathLines.add(rightDeath);[m
+           lines.add(rightDeath);[m
+         }[m
+[36m@@ -338,12 +245,12 @@[m [mclass LineManager implements Runnable {[m
+     println("Death line generation complete.");[m
+   }[m
+ [m
+[31m-  boolean isValidDeathLineAroundPath(Line newLine, ArrayList<PVector> points, ArrayList<Line> existingDeathLines) {[m
+[32m+[m[32m  boolean isValidDeathLineAroundPath(Line newLine, ArrayList<PVector> points, ArrayList<Line> existingDeathLines, float pathTightness) {[m
+     for (PVector point : points) {[m
+       if ([m
+         isPointInLine(newLine, point)[m
+         ||[m
+[31m-        distanceBetweenPointAndLine(newLine, point) < getSpawnRadius() * 2[m
+[32m+[m[32m        distanceBetweenPointAndLine(newLine, point) < getSpawnRadius()[m
+         //distanceBetweenPointAndLine(newLine, point) < pathTightness / 5[m
+         ) {[m
+         return false;[m
+[36m@@ -627,8 +534,9 @@[m [mclass LineManager implements Runnable {[m
+           // Merge: Increase width instead of adding a new box[m
+           currentLine.width += boxSize + spacing;[m
+           currentLine.centerX += (boxSize + spacing) / 2;[m
+[32m+[m[32m          println("in if of row " + i);[m
+         } else {[m
+[31m-          //println("in else of row " + i);[m
+[32m+[m[32m          println("in else of row " + i);[m
+           // Not adjacent: Save the current merged box and start a new one[m
+           mergedRow.add(currentLine);[m
+           currentLine = nextLine;[m
+[36m@@ -1309,11 +1217,13 @@[m [mclass LineManager implements Runnable {[m
+         }[m
+       } else if (!lineToMove.isFloor && !lineToConnectWith.isFrame) {[m
+ [m
+[32m+[m
+         if (connectNonDLinesAndDlines(lineToConnectWith, lineToMove)) { // lineToMove is either death or non-death[m
+ [m
+           return lineToConnectWith;[m
+         }[m
+ [m
+[32m+[m[32m        //[m
+ [m
+         if (lineToMove.isDeath) {[m
+ [m
+[36m@@ -1330,12 +1240,11 @@[m [mclass LineManager implements Runnable {[m
+             return lineToConnectWith;[m
+           }[m
+ [m
+[31m-          if (!lineToConnectWith.isDeath && random(1) < settings.chancesForNonDLinesToConnect[0]) {[m
+[32m+[m[32m          if (lineToConnectWith.isDeath && random(1) < settings.chancesForNonDLinesToConnect[0]) {[m
+             return lineToConnectWith;[m
+           }[m
+         }[m
+ [m
+[31m-[m
+         //[m
+ [m
+         //if (lineToMove.isDeath) {[m
+[36m@@ -2116,14 +2025,11 @@[m [mclass LineManager implements Runnable {[m
+   }[m
+ [m
+   void bgPatternNestedSquares() {[m
+[31m-    int numLayers = (int)random(10, 30); // Number of nested square layers[m
+[31m-    float maxSize = random (1100, 1400);[m
+[32m+[m[32m    int numLayers = (int)random(3, 6); // Number of nested square layers[m
+[32m+[m[32m    float maxSize = random (900, 1000);[m
+     float centerX = (startOfWidth + endOfWidth) / 2;[m
+     float centerY = (startOfHeight + endOfHeight) / 2;[m
+ [m
+[31m-    centerX = random(startOfWidth, endOfWidth);[m
+[31m-    centerY = random (startOfHeight, endOfHeight);[m
+[31m-[m
+     color lineColor;[m
+     int[] specificSchemes = new int[]{};[m
+ [m
+[36m@@ -2136,10 +2042,10 @@[m [mclass LineManager implements Runnable {[m
+     } else {[m
+       scheme = (int)random(numOfColorSchemesAvailable); // Assuming getRandomColor has 53 cases[m
+     }[m
+[31m-    float angle = random(0, 360);[m
+[32m+[m
+     for (int l = 1; l <= numLayers; l++) {[m
+       float size = maxSize * (1 - (float)l / (numLayers + 1));[m
+[31m-      if (l == 1) size = 1500;  [m
+[32m+[m[32m      float angle = random(0, 360); // Align squares or rotate for variation[m
+ [m
+       Line squareLine = new Line(centerX, centerY, size, size, angle, false);[m
+ [m
+[36m@@ -2211,15 +2117,11 @@[m [mclass LineManager implements Runnable {[m
+       Line duplicateLine = entry.getValue();[m
+       lines.remove(duplicateLine);[m
+     }[m
+[31m-    for (Line line : lines) { // this is useful if let's say a map pasted from bonk io has its own noPhysics shapes.[m
+[31m-      if (line.noPhysics && !line.isBgLine && !line.isOnlyForProgram)[m
+[31m-        lines.remove(line);[m
+[31m-    }[m
+   }[m
+ [m
+ [m
+   void updateNoPhysicsPlatsColor() {[m
+[31m-    if (!settings.addNoPhysicsLineDuplicates[0] || noPhysicsDuplicateLineMap == null)  return;[m
+[32m+[m[32m    if (!settings.addNoPhysicsLineDuplicates[0] || noPhysicsDuplicateLineMap == null || noPhysicsDuplicateLineMap.isEmpty())  return;[m
+     removeNoPhysicsDuplicatesFromLines();[m
+     duplicateAndScaleDownLines(lines);[m
+ [m
+[1mdiff --git a/MoreOptionsPage.pde b/MoreOptionsPage.pde[m
+[1mindex bc1f4ef..6d633a5 100644[m
+[1m--- a/MoreOptionsPage.pde[m
+[1m+++ b/MoreOptionsPage.pde[m
+[36m@@ -149,7 +149,7 @@[m [mclass MoreOptionsPage {[m
+ [m
+   void createToggleScriptManagerBtn() {[m
+     elements.add(cp5.addButton("toggleScriptManagerBtn")[m
+[31m-      .setPosition(xPos, startingYPos + verticalGap * 7)[m
+[32m+[m[32m      .setPosition(xPos, startingYPos + verticalGap * 6)[m
+       .setSize(elementWidth, elementHeight)[m
+       .setFont(defaultFont)[m
+       .setLabel("toggle script manager (ctrl + s)")[m
+[36m@@ -185,7 +185,7 @@[m [mclass MoreOptionsPage {[m
+     if (!settings.addFloors[0])[m
+       //lineManager.clearFloors();[m
+       if (clearExistingLines)[m
+[31m-        //lineManager.clearDeathLines();[m
+[32m+[m[32m        lineManager.clearDeathLines();[m
+     //if (!settings.addFrames[0])[m
+     //lineManager.clearFrames();[m
+     if (noOfLines > 0) {[m
+[36m@@ -199,11 +199,7 @@[m [mclass MoreOptionsPage {[m
+     float canvasCenterX = (startOfWidth + endOfWidth) / 2.0f;[m
+     float canvasCenterY = (startOfHeight + endOfHeight) / 2.0f;[m
+ [m
+[31m-    List<Line> targetLines = (multiSelectedLines != null && !multiSelectedLines.isEmpty())[m
+[31m-      ? multiSelectedLines[m
+[31m-      : lines;[m
+[31m-[m
+[31m-    for (Line line : targetLines) {[m
+[32m+[m[32m    for (Line line : lines) {[m
+       if (line.isOnlyForProgram) continue;[m
+       // Calculate offset from the canvas center[m
+       float offsetX = line.centerX - canvasCenterX;[m
+[1mdiff --git a/README.md b/README.md[m
+[1mindex 05cfaa2..f6eefeb 100644[m
+[1m--- a/README.md[m
+[1m+++ b/README.md[m
+[36m@@ -1,17 +1,30 @@[m
+[31m-**Note:** Not fully tested by others. You can contact me on Discord @eldertubby[m
+[32m+[m[32m**Note:**[m[41m [m
+[32m+[m[32m- Not fully tested by others. Please feel free to contact me on Discord @eldertubby.[m
+[32m+[m[32m- For context, maps by 'eldertubby' on bonk.io are made using this app.[m
+[32m+[m
+[32m+[m[32m## How to use:[m
+ [m
+ To generate parkour maps on bonk.io, you'll need to[m
+ [m
+[31m-### 1. Generate map data[m
+[32m+[m[32m**1. Generate map data**[m
+ [m
+ This is done using the parkour generator app. To use the app, you can either[m
+ [m
+[31m-- Download the .exe file[m
+[31m-- Or execute the source code using the [Processing IDE](https://processing.org/download).[m
+[32m+[m[32m- Run the ```.exe``` file by downloading the `.rar` file from [here](https://github.com/elder-tubby/bonkio-parkour-generator/releases/latest) <sub>[Recommended way for stable version]</sub>[m
+[32m+[m[32m- Or execute the source code using the [Processing IDE](https://processing.org/download). <sub>[Not recommended since the code is updated regularly and you might run into some unfinished features]</sub>[m
+ [m
+[31m-### 2. Convert that map data to bonk.io maps[m
+[32m+[m[32m**2. Convert that map data to bonk.io maps**[m
+ [m
+ 1. Install this [bonk.io mod](https://github.com/elder-tubby/parkour-gen-browser-script/blob/main/mini-script.js) on a script manager like tampermonkey.[m
+ 2. Copy map data from the parkour generator app and paste it using the new mod.[m
+ [m
+[31m-(For comparison, maps by 'eldertubby' on bonk.io are made using this app.)[m
+[32m+[m
+[32m+[m[32m## Features.[m
+[32m+[m[32m1. Randomly generate maps based on custom factors (such as _chances of lines connecting_, _minimum distance between lines_, etc.)[m
+[32m+[m[32m2. Easily edit maps using mouse, sliders, and keyboard shortcuts.[m
+[32m+[m[32m3. Randomly assign colors to plats based on plat type and choose random background patterns.[m
+[32m+[m[32m4. Copy a player's movement path data using pkrGenerator mod and paste in generator to create death around that path.[m
+[32m+[m[32m5. Scale a map up or down.[m
+[32m+[m[32m6. Save and load presets (presets contain the values of the custom settings/factors).[m
+[32m+[m[32m7. Copy map data of any bonk map using pkrGenerator mod and edit in generator. (Circles and polygons are not supported)[m
+[32m+[m[32m8. (Technical) Directly edit map using code for full control. For example, you can select multiple lines and set all lines that are non-death and non-bouncy to no-jump. I've prepared this this [ChatGPT chat](https://chatgpt.com/share/67df6b9e-b360-8006-93af-5f8523a7d46c) to figure out the commmands.[m
+[1mdiff --git a/Settings.pde b/Settings.pde[m
+[1mindex d5f6ff6..cfff567 100644[m
+[1m--- a/Settings.pde[m
+[1m+++ b/Settings.pde[m
+[36m@@ -177,15 +177,18 @@[m [mclass Settings {[m
+     // Handle different array types[m
+     if (array instanceof float[]) {[m
+ [m
+[32m+[m[32m      println("array is instance of float");[m
+       for (float value : (float[]) array) {[m
+         jsonArray.append(value);[m
+       }[m
+     } else if (array instanceof boolean[]) {[m
+ [m
+[32m+[m[32m      println("array is instance of boolean");[m
+       for (boolean value : (boolean[]) array) {[m
+         jsonArray.append(value);[m
+       }[m
+     } else if (array instanceof ArrayList) {[m
+[32m+[m[32m      println("array is instance of ArrayList");[m
+       for (Object value : (ArrayList<?>) array) {[m
+         if (value instanceof Float) {[m
+           jsonArray.append((Float) value);[m
+[1mdiff --git a/main.pde b/main.pde[m
+[1mindex 9992f89..2ddc5a5 100644[m
+[1m--- a/main.pde[m
+[1m+++ b/main.pde[m
+[36m@@ -133,7 +133,6 @@[m [mvoid drawLinesFromList() {[m
+     // Optionally, restore the rectMode to CORNER if your other drawing uses it:[m
+     rectMode(CORNER);[m
+   }[m
+[31m-[m
+[31m-  //if (!isProcessingLines)[m
+[31m-    //lineManager.moveLinesForwardOrBackward();[m
+[32m+[m[32m  if (!isProcessingLines)[m
+[32m+[m[32m    lineManager.moveLinesForwardOrBackward();[m
+ }[m
+[1mdiff --git a/saved-presets/base - big rectangle flrs, small rectangle lines.json b/saved-presets/base - big rectangle flrs, small rectangle lines.json[m
+[1mindex 7632581..d325add 100644[m
+[1m--- a/saved-presets/base - big rectangle flrs, small rectangle lines.json[m	
+[1m+++ b/saved-presets/base - big rectangle flrs, small rectangle lines.json[m	
+[36m@@ -2,11 +2,12 @@[m
+   "frameAngleStart": [0],[m
+   "sameColorForAllNonDLines": [true],[m
+   "minDistanceBtwDLinesAndFrames": [27.5],[m
+[32m+[m[32m  "chancesForDLinesAndDLinesToConnect": [0],[m
+   "rndlyChooseOneSchemeForBg": [true],[m
+[31m-  "addFloors": [false],[m
+[32m+[m[32m  "addFloors": [true],[m
+   "areFloorsBouncy": [false],[m
+[31m-  "maxLineWidth": [90.81999969482422],[m
+[31m-  "setSpecificLineAngles": [true],[m
+[32m+[m[32m  "maxLineWidth": [28.44499969482422],[m
+[32m+[m[32m  "setSpecificLineAngles": [false],[m
+   "chancesForNonDLinesToConnectWithFrames": [0],[m
+   "chancesOfNoJump": [0],[m
+   "numOfFloors": [7.929999828338623],[m
+[36m@@ -16,7 +17,7 @@[m
+   "heightOfLine": [2],[m
+   "chancesForDLinesToConnectWithFrames": [0.5099999904632568],[m
+   "widthOfLine": [20],[m
+[31m-  "addFrames": [false],[m
+[32m+[m[32m  "addFrames": [true],[m
+   "chancesForDLinesAndNonDLinesToConnect": [0],[m
+   "grappleColor": [],[m
+   "mapSize": [8.559999465942383],[m
+[36m@@ -25,7 +26,7 @@[m
+   "floorConnectAngleStart": [90],[m
+   "limitLineAngleAfterConnectingItsCorner": [true],[m
+   "canLinesOverlap": [false],[m
+[31m-  "lineConnectAngleStart": [90],[m
+[32m+[m[32m  "lineConnectAngleStart": [190.79998779296875],[m
+   "minDistanceBtwFloors": [30.5],[m
+   "sameColorForAllGLines": [true],[m
+   "chancesForDLinesToConnectWithFloors": [1],[m
+[36m@@ -33,18 +34,14 @@[m
+   "frameAngleEnd": [0],[m
+   "minDistanceBtwNonDLinesAndFrames": [4.5],[m
+   "lineToMoveConnectPointStart": [0],[m
+[31m-  "minDistanceBtwNonDLines": [63.5],[m
+[32m+[m[32m  "minDistanceBtwNonDLines": [25.5],[m
+   "frameWidth": [10],[m
+   "chancesOfDeath": [0],[m
+   "sameColorForAllDLines": [true],[m
+   "connectFloorLeft": [true],[m
+   "minDistanceBtwNonDLinesAndFloors": [26.999998092651367],[m
+   "chancesForFloorsAndFloorsToConnect": [0],[m
+[31m-  "nonDLineAngle": [[m
+[31m-    0,[m
+[31m-    90[m
+[31m-  ],[m
+[31m-  "chancesForDLinesToConnect": [1],[m
+[32m+[m[32m  "nonDLineAngle": [0],[m
+   "chancesForFloorsToConnectAtCorner": [1],[m
+   "chancesForNonDLinesAndFloorsToConnectAtCorner": [0.07999999821186066],[m
+   "chancesForNonDLinesToConnectAtCorner": [0],[m
+[36m@@ -59,15 +56,15 @@[m
+   "dLineAngle": [0],[m
+   "sameWidthForAllLines": [false],[m
+   "minLineHeight": [10.979999542236328],[m
+[32m+[m[32m  "chancesForNonDLinesAndNonDLinesToConnect": [0],[m
+   "minFloorWidth": [95.7699966430664],[m
+   "lineAngleEnd": [0],[m
+   "setSpecificFloorAngles": [false],[m
+   "globalBounciness": [],[m
+   "floorHeight": [88.32499694824219],[m
+   "lineToMoveConnectPointEnd": [1],[m
+[31m-  "maxLineHeight": [33.43499755859375],[m
+[31m-  "chancesForNonDLinesToConnect": [0.06499999761581421],[m
+[31m-  "lineConnectAngleEnd": [0],[m
+[32m+[m[32m  "maxLineHeight": [25.94999885559082],[m
+[32m+[m[32m  "lineConnectAngleEnd": [360],[m
+   "addBackground": [true],[m
+   "areFramesBouncy": [false],[m
+   "sameHeightForAllLines": [false],[m
+[36m@@ -76,7 +73,7 @@[m
+   "chancesOfGrapple": [0],[m
+   "areDLinesAtBack": [true],[m
+   "addNoPhysicsLineDuplicates": [false],[m
+[31m-  "minLineWidth": [33.43499755859375],[m
+[32m+[m[32m  "minLineWidth": [13.47499942779541],[m
+   "sameColorForAllBLines": [true],[m
+   "floorAngleStart": [0],[m
+   "minDistanceBtwDLinesAndFloors": [26],[m
+[1mdiff --git a/saved-presets/base - connected random angled b and non blines.json b/saved-presets/base - connected random angled b and non blines.json[m
+[1mindex 0b1945c..e846fdd 100644[m
+[1m--- a/saved-presets/base - connected random angled b and non blines.json[m	
+[1m+++ b/saved-presets/base - connected random angled b and non blines.json[m	
+[36m@@ -1,7 +1,7 @@[m
+ {[m
+[31m-  "frameAngleStart": [0],[m
+   "sameColorForAllNonDLines": [true],[m
+   "minDistanceBtwDLinesAndFrames": [27.5],[m
+[32m+[m[32m  "chancesForDLinesAndDLinesToConnect": [0],[m
+   "rndlyChooseOneSchemeForBg": [true],[m
+   "addFloors": [false],[m
+   "areFloorsBouncy": [true],[m
+[36m@@ -30,7 +30,6 @@[m
+   "sameColorForAllGLines": [true],[m
+   "chancesForDLinesToConnectWithFloors": [1],[m
+   "floorAngleEnd": [0],[m
+[31m-  "frameAngleEnd": [0],[m
+   "minDistanceBtwNonDLinesAndFrames": [20.5],[m
+   "lineToMoveConnectPointStart": [0],[m
+   "minDistanceBtwNonDLines": [40.5],[m
+[36m@@ -44,13 +43,10 @@[m
+     0,[m
+     90[m
+   ],[m
+[31m-  "chancesForDLinesToConnect": [1],[m
+   "chancesForFloorsToConnectAtCorner": [1],[m
+   "chancesForNonDLinesAndFloorsToConnectAtCorner": [0.07999999821186066],[m
+   "chancesForNonDLinesToConnectAtCorner": [0],[m
+   "connectFloorDown": [true],[m
+[31m-  "pathTightness": [20],[m
+[31m-  "areBLinesAtBack": [true],[m
+   "connectFloorUp": [false],[m
+   "connectFloorRight": [true],[m
+   "chancesOfBounciness": [0.35999998450279236],[m
+[36m@@ -62,6 +58,8 @@[m
+   "dLineAngle": [0],[m
+   "sameWidthForAllLines": [false],[m
+   "minLineHeight": [5.989999771118164],[m
+[32m+[m[32m  "moveDLinesToBack": [true],[m
+[32m+[m[32m  "chancesForNonDLinesAndNonDLinesToConnect": [0.125],[m
+   "minFloorWidth": [95.7699966430664],[m
+   "lineAngleEnd": [43.20000076293945],[m
+   "setSpecificFloorAngles": [true],[m
+[36m@@ -69,7 +67,6 @@[m
+   "floorHeight": [35.93000030517578],[m
+   "lineToMoveConnectPointEnd": [1],[m
+   "maxLineHeight": [55.88999938964844],[m
+[31m-  "chancesForNonDLinesToConnect": [0.19499999284744263],[m
+   "lineConnectAngleEnd": [0],[m
+   "addBackground": [true],[m
+   "areFramesBouncy": [false],[m
+[36m@@ -77,7 +74,7 @@[m
+   "nonDeathColor": [],[m
+   "minDistanceBtwDLines": [22.5],[m
+   "chancesOfGrapple": [0],[m
+[31m-  "areDLinesAtBack": [true],[m
+[32m+[m[32m  "moveDLinesToFront": [false],[m
+   "addNoPhysicsLineDuplicates": [false],[m
+   "minLineWidth": [28.44499969482422],[m
+   "sameColorForAllBLines": [true],[m
+[1mdiff --git a/saved-presets/temp.json b/saved-presets/temp.json[m
+[1mindex ae07468..900d1c3 100644[m
+[1m--- a/saved-presets/temp.json[m
+[1m+++ b/saved-presets/temp.json[m
+[36m@@ -1,88 +1,94 @@[m
+ {[m
+   "frameAngleStart": [0],[m
+   "sameColorForAllNonDLines": [true],[m
+[31m-  "minDistanceBtwDLinesAndFrames": [27.5],[m
+[32m+[m[32m  "minDistanceBtwDLinesAndFrames": [0],[m
+   "rndlyChooseOneSchemeForBg": [true],[m
+   "addFloors": [true],[m
+   "areFloorsBouncy": [false],[m
+[31m-  "maxLineWidth": [48.404998779296875],[m
+[32m+[m[32m  "maxLineWidth": [1],[m
+   "setSpecificLineAngles": [false],[m
+   "chancesForNonDLinesToConnectWithFrames": [0],[m
+   "chancesOfNoJump": [0],[m
+[31m-  "numOfFloors": [7.929999828338623],[m
+[31m-  "chancesForDLinesAndNonDLinesToConnectAtCorner": [0.17999999225139618],[m
+[31m-  "chancesForNonDLinesToConnectWithFloors": [0.5],[m
+[31m-  "minDistanceBtwNonDLinesAndDLines": [26.499998092651367],[m
+[31m-  "heightOfLine": [2],[m
+[31m-  "chancesForDLinesToConnectWithFrames": [0.5099999904632568],[m
+[31m-  "widthOfLine": [20],[m
+[32m+[m[32m  "numOfFloors": [1.9900000095367432],[m
+[32m+[m[32m  "chancesForDLinesAndNonDLinesToConnectAtCorner": [1],[m
+[32m+[m[32m  "chancesForNonDLinesToConnectWithFloors": [1],[m
+[32m+[m[32m  "minDistanceBtwNonDLinesAndDLines": [0],[m
+[32m+[m[32m  "heightOfLine": [47.57933807373047],[m
+[32m+[m[32m  "chancesForDLinesToConnectWithFrames": [0],[m
+[32m+[m[32m  "widthOfLine": [7.4248881340026855],[m
+   "addFrames": [true],[m
+[31m-  "chancesForDLinesAndNonDLinesToConnect": [0],[m
+[32m+[m[32m  "chancesForDLinesAndNonDLinesToConnect": [1],[m
+   "grappleColor": [],[m
+[31m-  "mapSize": [10],[m
+[32m+[m[32m  "mapSize": [11],[m
+   "lineAngleStart": [0],[m
+[31m-  "maxFloorWidth": [380.0799865722656],[m
+[31m-  "floorConnectAngleStart": [71.99999237060547],[m
+[32m+[m[32m  "maxFloorWidth": [259.79498291015625],[m
+[32m+[m[32m  "floorConnectAngleStart": [90],[m
+   "limitLineAngleAfterConnectingItsCorner": [true],[m
+   "canLinesOverlap": [false],[m
+[31m-  "lineConnectAngleStart": [0],[m
+[31m-  "minDistanceBtwFloors": [30.5],[m
+[32m+[m[32m  "lineConnectAngleStart": [90],[m
+[32m+[m[32m  "minDistanceBtwFloors": [19.999998092651367],[m
+   "sameColorForAllGLines": [true],[m
+[31m-  "chancesForDLinesToConnectWithFloors": [1],[m
+[32m+[m[32m  "chancesForDLinesToConnectWithFloors": [0],[m
+   "floorAngleEnd": [0],[m
+   "frameAngleEnd": [0],[m
+[31m-  "minDistanceBtwNonDLinesAndFrames": [24],[m
+[31m-  "lineToMoveConnectPointStart": [0.8100000023841858],[m
+[31m-  "minDistanceBtwNonDLines": [26.499998092651367],[m
+[31m-  "frameWidth": [10],[m
+[32m+[m[32m  "minDistanceBtwNonDLinesAndFrames": [0],[m
+[32m+[m[32m  "lineToMoveConnectPointStart": [1],[m
+[32m+[m[32m  "minDistanceBtwNonDLines": [0],[m
+[32m+[m[32m  "frameWidth": [70.6500015258789],[m
+   "chancesOfDeath": [0],[m
+   "sameColorForAllDLines": [true],[m
+   "connectFloorLeft": [true],[m
+[31m-  "minDistanceBtwNonDLinesAndFloors": [34.5],[m
+[31m-  "chancesForFloorsAndFloorsToConnect": [0],[m
+[31m-  "nonDLineAngle": [0],[m
+[31m-  "chancesForDLinesToConnect": [1],[m
+[32m+[m[32m  "minDistanceBtwNonDLinesAndFloors": [0],[m
+[32m+[m[32m  "chancesForFloorsAndFloorsToConnect": [1],[m
+[32m+[m[32m  "nonDLineAngle": [[m
+[32m+[m[32m    0,[m
+[32m+[m[32m    90[m
+[32m+[m[32m  ],[m
+[32m+[m[32m  "chancesForDLinesToConnect": [0],[m
+   "chancesForFloorsToConnectAtCorner": [1],[m
+[31m-  "chancesForNonDLinesAndFloorsToConnectAtCorner": [0.10999999940395355],[m
+[31m-  "chancesForNonDLinesToConnectAtCorner": [0],[m
+[32m+[m[32m  "chancesForNonDLinesAndFloorsToConnectAtCorner": [0],[m
+[32m+[m[32m  "chancesForNonDLinesToConnectAtCorner": [1],[m
+   "connectFloorDown": [false],[m
+[31m-  "pathTightness": [14.5],[m
+[31m-  "areBLinesAtBack": [true],[m
+[32m+[m[32m  "pathTightness": [20],[m
+[32m+[m[32m  "areBLinesAtBack": [false],[m
+   "connectFloorUp": [true],[m
+[31m-  "connectFloorRight": [true],[m
+[31m-  "chancesOfBounciness": [0],[m
+[31m-  "minDistanceBtwFloorsAndFrames": [24.499998092651367],[m
+[31m-  "floorAngle": [29],[m
+[31m-  "dLineAngle": [0],[m
+[32m+[m[32m  "connectFloorRight": [false],[m
+[32m+[m[32m  "chancesOfBounciness": [1],[m
+[32m+[m[32m  "minDistanceBtwFloorsAndFrames": [49.499996185302734],[m
+[32m+[m[32m  "floorAngle": [[m
+[32m+[m[32m    0,[m
+[32m+[m[32m    90[m
+[32m+[m[32m  ],[m
+[32m+[m[32m  "dLineAngle": [286.2388610839844],[m
+   "sameWidthForAllLines": [false],[m
+[31m-  "minLineHeight": [33.43499755859375],[m
+[31m-  "minFloorWidth": [347.2749938964844],[m
+[31m-  "lineAngleEnd": [360],[m
+[32m+[m[32m  "minLineHeight": [5.989999771118164],[m
+[32m+[m[32m  "minFloorWidth": [278.0199890136719],[m
+[32m+[m[32m  "lineAngleEnd": [0],[m
+   "setSpecificFloorAngles": [false],[m
+   "globalBounciness": [],[m
+[31m-  "floorHeight": [35.93000030517578],[m
+[31m-  "lineToMoveConnectPointEnd": [0],[m
+[32m+[m[32m  "floorHeight": [158.18499755859375],[m
+[32m+[m[32m  "lineToMoveConnectPointEnd": [1],[m
+   "maxLineHeight": [1],[m
+[31m-  "chancesForNonDLinesToConnect": [0.4699999988079071],[m
+[31m-  "lineConnectAngleEnd": [360],[m
+[32m+[m[32m  "chancesForNonDLinesToConnect": [0],[m
+[32m+[m[32m  "lineConnectAngleEnd": [0],[m
+   "addBackground": [true],[m
+[31m-  "areFramesBouncy": [false],[m
+[32m+[m[32m  "areFramesBouncy": [true],[m
+   "sameHeightForAllLines": [false],[m
+   "nonDeathColor": [],[m
+[31m-  "minDistanceBtwDLines": [22.5],[m
+[32m+[m[32m  "minDistanceBtwDLines": [0],[m
+   "chancesOfGrapple": [0],[m
+   "areDLinesAtBack": [true],[m
+   "addNoPhysicsLineDuplicates": [false],[m
+[31m-  "minLineWidth": [38.42499923706055],[m
+[32m+[m[32m  "minLineWidth": [123.25499725341797],[m
+   "sameColorForAllBLines": [true],[m
+[31m-  "floorAngleStart": [0],[m
+[31m-  "minDistanceBtwDLinesAndFloors": [26],[m
+[31m-  "floorConnectAngleEnd": [105.29999542236328],[m
+[32m+[m[32m  "floorAngleStart": [43.20000076293945],[m
+[32m+[m[32m  "minDistanceBtwDLinesAndFloors": [0],[m
+[32m+[m[32m  "floorConnectAngleEnd": [0],[m
+   "bouncyColor": [],[m
+   "this$0": [],[m
+[31m-  "chancesForFloorsToConnectWithFrames": [1],[m
+[31m-  "chancesForDLinesToConnectAtCorner": [0],[m
+[31m-  "chancesForDLinesAndFloorsToConnectAtCorner": [0.10499999672174454],[m
+[32m+[m[32m  "chancesForFloorsToConnectWithFrames": [0],[m
+[32m+[m[32m  "chancesForDLinesToConnectAtCorner": [1],[m
+[32m+[m[32m  "chancesForDLinesAndFloorsToConnectAtCorner": [0.08372769504785538],[m
+   "limitFloorAngleAfterConnect": [true],[m
+   "deathColor": [],[m
+   "areFramesDeath": [false][m

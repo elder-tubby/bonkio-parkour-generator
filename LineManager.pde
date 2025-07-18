@@ -1534,8 +1534,8 @@ class LineManager implements Runnable {
           ((lineToConnectWith.isDeath && !lineToMove.isDeath) || (!lineToConnectWith.isDeath && lineToMove.isDeath)) && connectDLinesAndNonDLinesAtCorner[0]) {
           isPointAtCorner = true;
         }
-      } else if (((lineToConnectWith.isFloor && lineToMove.isDeath) || (lineToConnectWith.isDeath && lineToMove.isFloor)) && connectDLinesAndFloorsAtCorner[0] ||
-        ((lineToConnectWith.isFloor && !lineToMove.isFloor) || (!lineToConnectWith.isFloor && lineToMove.isFloor)) && connectNonDLinesAndFloorsAtCorner[0] ||
+      } else if ((lineToConnectWith.isFloor && lineToMove.isDeath && !lineToMove.isFloor && connectDLinesAndFloorsAtCorner[0]) ||
+        (lineToConnectWith.isFloor && !lineToMove.isFloor && !lineToMove.isDeath && connectNonDLinesAndFloorsAtCorner[0]) ||
         (lineToConnectWith.isFloor && lineToMove.isFloor) && connectFloorsAtCorner[0]) {
         isPointAtCorner = true;
       }

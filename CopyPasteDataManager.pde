@@ -135,9 +135,22 @@ void handlePasteLineDataBtnClick() {
   cp5.getController("lineDataCopiedLabel").hide();
 
   // Safely retrieve mapSize, defaulting to a value if it doesn't exist
-  int mapSize = jsonData.hasKey("version") ?
-    (jsonData.hasKey("mapSize") ? jsonData.getInt("mapSize") : 7)
-    : getTransformedMapSize(jsonData.hasKey("mapSize") ? jsonData.getInt("mapSize") : 7);
+  int mapSize;
+
+  if (jsonData.hasKey("version")) {
+
+    if (jsonData.hasKey("mapSize")) {
+      mapSize = jsonData.getInt("mapSize");
+    } else {
+      mapSize = (int) Math.floor(settings.mapSize[0]);
+    }
+  } else {
+    if (jsonData.hasKey("mapSize")) {
+      mapSize = getTransformedMapSize(jsonData.getInt("mapSize"));
+    } else {
+      mapSize = getTransformedMapSize(7);
+    }
+  }
 
   settings.mapSize[0] = mapSize;
   uiManager.customMapPage.updateControllerByName("mapSize", mapSize);
@@ -248,9 +261,11 @@ void handlePasteLineDataBtnClick() {
 
     // Handle "color", default to white if null or missing
     int colorValue = lineData.hasKey("color") && lineData.get("color") != null
-      ? lineData.getInt("color") : color(255, 255, 255);  // Default to white if "color" is missing or null
-
-    newLine.lineColor = decimalToRgb(colorValue);
+      ? lineData.getInt("color") : -1;
+    if (colorValue != -1)
+      newLine.lineColor = decimalToRgb(colorValue);
+    else
+      editLinesManager.handlePlatsColorBtnClick();
 
     ArrayList<Line> tempLines = new ArrayList<Line>();
     tempLines.add(newLine);
