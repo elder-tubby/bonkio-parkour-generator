@@ -18,6 +18,9 @@ This is done using the parkour generator app. To use the app, you can either
 1. Install this [bonk.io mod](https://github.com/elder-tubby/parkour-gen-browser-script/blob/main/mini-script.js) on a script manager like tampermonkey.
 2. Copy map data from the parkour generator app and paste it using the new mod.
 
+**3. Confirm your graphics are accurate**
+
+This is how everything should look like: [YouTube demo](https://www.youtube.com/watch?v=I0Nrr0XmPMA). If it doesn't, make sure you have JDK 17 installed. Or feel free to message me.
 
 ## Features.
 1. Randomly generate maps based on custom factors (such as _chances of lines connecting_, _minimum distance between lines_, etc.)
