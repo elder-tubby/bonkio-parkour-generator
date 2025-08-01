@@ -13,6 +13,8 @@ class LineManager implements Runnable {
   float[] randomDLineAngle = new float[1];
   float[] randomNonDLineAngle = new float[1];
   float[] randomFloorAngle = new float[1];
+  float EXTRA_FRAME_WIDTH = 400;
+
 
   boolean isFloorsGenerationComplete;
 
@@ -1230,7 +1232,7 @@ class LineManager implements Runnable {
 
       PVector randomPoint = getRandomPointOnLine(lineToConnectWith, lineToMove);
       if (isPointWithinCanvas(randomPoint)) {
-
+        
         updateLineAngle(lineToMove, lineToConnectWith, randomPoint);
         moveLineToTouch(lineToMove, randomPoint, lineToConnectWith);
         addConnectedLinePair(lineToMove, lineToConnectWith);
@@ -1286,7 +1288,6 @@ class LineManager implements Runnable {
 
       if (lineToMove.isFloor) {
 
-        println("lineToMove.isFloor");
 
         if (connectFloorToFrame && lineToConnectWith.isFrame) {
           if (!areFramesAngled()) {
@@ -1405,17 +1406,41 @@ class LineManager implements Runnable {
 
   boolean areFramesAngled() {
     for (Line line : lines) {
-      if (line.isFrame && (line.angle != 0 || line.angle != 90)) return true;
+      if (line.isFrame && !(line.angle == 0 || line.angle == 90)) {
+        return true;
+      }
     }
     return false;
   }
 
+
   boolean connectToThisSpecificFrame(Line lineToConnectWith) {
-    return (settings.connectFloorUp[0] && lineToConnectWith.centerY == startOfHeight) ||
-      (settings.connectFloorRight[0] && lineToConnectWith.centerX == endOfWidth) ||
-      (settings.connectFloorDown[0] && lineToConnectWith.centerY == endOfHeight) ||
-      (settings.connectFloorLeft[0] && lineToConnectWith.centerX == startOfWidth);
+    final float HALF_EXTRA_FRAME = EXTRA_FRAME_WIDTH / 2;
+    final float CONNECTION_TOLERANCE = 1;  // tweak as needed
+
+    // Precompute the center positions of the 4 frame lines
+    float topY    = startOfHeight - HALF_EXTRA_FRAME;
+    float bottomY = endOfHeight   + HALF_EXTRA_FRAME;
+    float leftX   = startOfWidth  - HALF_EXTRA_FRAME;
+    float rightX  = endOfWidth    + HALF_EXTRA_FRAME;
+
+    // Check individual conditions
+    boolean connectUp    = settings.connectFloorUp[0]    && almostEqual(lineToConnectWith.centerY, topY, CONNECTION_TOLERANCE);
+    boolean connectRight = settings.connectFloorRight[0] && almostEqual(lineToConnectWith.centerX, rightX, CONNECTION_TOLERANCE);
+    boolean connectDown  = settings.connectFloorDown[0]  && almostEqual(lineToConnectWith.centerY, bottomY, CONNECTION_TOLERANCE);
+    boolean connectLeft  = settings.connectFloorLeft[0]  && almostEqual(lineToConnectWith.centerX, leftX, CONNECTION_TOLERANCE);
+
+    boolean result = connectUp || connectRight || connectDown || connectLeft;
+
+    return result;
   }
+
+
+  // helper:
+  boolean almostEqual(float a, float b, float tol) {
+    return abs(a - b) <= tol;
+  }
+
 
 
   // Helper: rotates a vector by a given angle (in radians)
@@ -1545,8 +1570,9 @@ class LineManager implements Runnable {
         t = buffer / lineToConnectWith.width;
       else
         t = 1 - buffer / lineToConnectWith.width;
-    } else
+    } else {
       t = random(buffer / lineToConnectWith.width, 1 - buffer / lineToConnectWith.width);
+    }
 
     return t;
   }
@@ -1555,7 +1581,9 @@ class LineManager implements Runnable {
 
     PVector[] edgePoints = lineToConnectWith.getEdgePoints(false);
     float t = getPointOfConnection(lineToConnectWith, lineToMove);
-    return new PVector(edgePoints[0].x + t * (edgePoints[1].x - edgePoints[0].x),
+    //return new PVector(edgePoints[0].x + t * (edgePoints[1].x - edgePoints[0].x),
+    //  edgePoints[0].y + t * (edgePoints[1].y - edgePoints[0].y));
+      return new PVector(edgePoints[0].x + t * (edgePoints[1].x - edgePoints[0].x),
       edgePoints[0].y + t * (edgePoints[1].y - edgePoints[0].y));
   }
 
@@ -2139,7 +2167,7 @@ class LineManager implements Runnable {
     float angle = random(0, 360);
     for (int l = 1; l <= numLayers; l++) {
       float size = maxSize * (1 - (float)l / (numLayers + 1));
-      if (l == 1) size = 1500;  
+      if (l == 1) size = 1500;
 
       Line squareLine = new Line(centerX, centerY, size, size, angle, false);
 
@@ -2313,8 +2341,7 @@ class LineManager implements Runnable {
 
 
   void createFrames() {
-    float extraFrameWidth = 400;
-    float frameWidth = extraFrameWidth + settings.frameWidth[0];
+    float frameWidth = EXTRA_FRAME_WIDTH + settings.frameWidth[0];
     boolean isDeath = settings.areFramesDeath[0];
     float angle = random(settings.frameAngleStart[0], settings.frameAngleEnd[0]);
 
@@ -2322,8 +2349,8 @@ class LineManager implements Runnable {
     float centerX = (startOfWidth + endOfWidth) / 2;
     float centerY = (startOfHeight + endOfHeight) / 2;
 
-    float horizontalFrameHeight = endOfWidth - startOfWidth + extraFrameWidth;
-    float verticalFrameHeight = endOfHeight - startOfHeight + extraFrameWidth;
+    float horizontalFrameHeight = endOfWidth - startOfWidth + EXTRA_FRAME_WIDTH;
+    float verticalFrameHeight = endOfHeight - startOfHeight + EXTRA_FRAME_WIDTH;
 
     float differenceBtwHorAndVerFrames = 0;
 
@@ -2336,10 +2363,10 @@ class LineManager implements Runnable {
     float angleRad = (float) Math.toRadians(angle);
 
     // Create and rotate each frame line
-    lines.add(createRotatedFrameLine(centerX, centerY, (startOfWidth + endOfWidth) / 2, startOfHeight - extraFrameWidth / 2, horizontalFrameHeight, frameWidth, 0, angleRad, isDeath)); // Ceiling
-    lines.add(createRotatedFrameLine(centerX, centerY, endOfWidth - differenceBtwHorAndVerFrames / 2 + extraFrameWidth / 2, (startOfHeight + endOfHeight) / 2, verticalFrameHeight, frameWidth, 90, angleRad, isDeath)); // Right wall
-    lines.add(createRotatedFrameLine(centerX, centerY, (startOfWidth + endOfWidth) / 2, endOfHeight + extraFrameWidth / 2, horizontalFrameHeight, frameWidth, 0, angleRad, isDeath)); // Floor
-    lines.add(createRotatedFrameLine(centerX, centerY, startOfWidth + differenceBtwHorAndVerFrames / 2 - extraFrameWidth / 2, (startOfHeight + endOfHeight) / 2, verticalFrameHeight, frameWidth, 90, angleRad, isDeath)); // Left wall
+    lines.add(createRotatedFrameLine(centerX, centerY, (startOfWidth + endOfWidth) / 2, startOfHeight - EXTRA_FRAME_WIDTH / 2, horizontalFrameHeight, frameWidth, 0, angleRad, isDeath)); // Ceiling
+    lines.add(createRotatedFrameLine(centerX, centerY, endOfWidth - differenceBtwHorAndVerFrames / 2 + EXTRA_FRAME_WIDTH / 2, (startOfHeight + endOfHeight) / 2, verticalFrameHeight, frameWidth, 90, angleRad, isDeath)); // Right wall
+    lines.add(createRotatedFrameLine(centerX, centerY, (startOfWidth + endOfWidth) / 2, endOfHeight + EXTRA_FRAME_WIDTH / 2, horizontalFrameHeight, frameWidth, 0, angleRad, isDeath)); // Floor
+    lines.add(createRotatedFrameLine(centerX, centerY, startOfWidth + differenceBtwHorAndVerFrames / 2 - EXTRA_FRAME_WIDTH / 2, (startOfHeight + endOfHeight) / 2, verticalFrameHeight, frameWidth, 90, angleRad, isDeath)); // Left wall
   }
 
   // Helper method to rotate and create a line

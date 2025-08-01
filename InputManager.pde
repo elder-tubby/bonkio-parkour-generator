@@ -168,7 +168,7 @@ void handleLineToggleActions() {
   boolean isBouncy;
   if (key == 'b') {
     // Handle bounce toggle for multi-selected or single selected line
-    if (multiSelectedLines.size() > 1) {
+    if (multiSelectedLines.size() > 0) {
       isBouncy = !multiSelectedLines.get(0).isBouncy;
     } else if (selectedLine != null) {
       isBouncy = !selectedLine.isBouncy;
@@ -181,7 +181,7 @@ void handleLineToggleActions() {
   if (key == 'd') {
     // Handle death toggle for multi-selected or single selected line
     boolean isDeath;
-    if (multiSelectedLines.size() > 1) {
+    if (multiSelectedLines.size() > 0) {
       isDeath = !multiSelectedLines.get(0).isDeath;
     } else if (selectedLine != null) {
       isDeath = !selectedLine.isDeath;
@@ -194,7 +194,7 @@ void handleLineToggleActions() {
   if (key == 'g') {
     // Handle grapple toggle for multi-selected or single selected line
     boolean hasGrapple;
-    if (multiSelectedLines.size() > 1) {
+    if (multiSelectedLines.size() > 0) {
       hasGrapple = !multiSelectedLines.get(0).hasGrapple;
     } else if (selectedLine != null) {
       hasGrapple = !selectedLine.hasGrapple;
@@ -207,7 +207,7 @@ void handleLineToggleActions() {
   if (key == 'n') {
     // Handle no jump toggle for multi-selected or single selected line
     boolean isNoJump;
-    if (multiSelectedLines.size() > 1) {
+    if (multiSelectedLines.size() > 0) {
       isNoJump = !multiSelectedLines.get(0).isNoJump;
     } else if (selectedLine != null) {
       isNoJump = !selectedLine.isNoJump;

@@ -51,7 +51,7 @@
   "connectFloorDown": [true],
   "pathTightness": [20],
   "areBLinesAtBack": [true],
-  "connectFloorUp": [false],
+  "connectFloorUp": [true],
   "connectFloorRight": [false],
   "chancesOfBounciness": [0],
   "minDistanceBtwFloorsAndFrames": [56.24959945678711],
