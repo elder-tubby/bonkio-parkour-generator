@@ -15,7 +15,7 @@ This is done using the parkour generator app. To use the app, you can either
 
 **2. Convert that map data to bonk.io maps**
 
-1. Install this [bonk.io mod](https://github.com/elder-tubby/parkour-gen-browser-script/blob/main/mini-script.js) on a script manager like tampermonkey.
+1. Install this [bonk.io mod](https://github.com/elder-tubby/bonkio-parkour-generator/blob/main/browser-script/pkrGenerator.js) on a script manager like tampermonkey.
 2. Copy map data from the parkour generator app and paste it using the new mod.
 
 **3. Confirm your graphics are accurate**
