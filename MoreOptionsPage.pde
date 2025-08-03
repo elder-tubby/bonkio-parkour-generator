@@ -34,7 +34,7 @@ class MoreOptionsPage {
 
     elements.add(cp5.addButton("deathAroundPathButton")
       .setPosition(xPos, startingYPos + verticalGap * uiIndexInColumn)
-      .setLabel("create death around copied player path (x)")
+      .setLabel("create death around copied player path")
       .setFont(defaultFont)
       .setSize(elementWidth, elementHeight)
       .onClick(new CallbackListener() {

@@ -250,7 +250,7 @@ class EditLinesManager {
       .setPosition(xPos, startYPos + yDistBtwSliders * 1)
       .setSize(80, 20)
       .setFont(tabFont)
-      .setLabel("delete (del)")
+      .setLabel("delete (x)")
       //.setColorBackground(color(150))
       .setColorForeground(color(150, 0, 0))
       .setColorActive(color(255, 0, 0))

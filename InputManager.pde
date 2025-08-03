@@ -152,7 +152,6 @@ void handleGenerateKeyActions() {
     if (key == 'f') generateBtnManager.handleGenerateFloorsClick();
     else if (key == 'l') generateBtnManager.handleGenerateLinesClick();
     else if (key == 'c') editLinesManager.handleCopyLineDataBtnClick();
-    else if (key == 'x') uiManager.moreOptionsPage.handleCreateDeathFromPathClick(false);
     if (selectedLine == null && (multiSelectedLines == null || multiSelectedLines.isEmpty())) {
       if (key == 'g') generate();
       if (key == 'a') editLinesManager.handleAddNewLineBtnClick();
@@ -217,7 +216,7 @@ void handleLineToggleActions() {
     editLinesManager.handleNoJumpToggle(isNoJump);
   }
 
-  if (keyCode == DELETE) editLinesManager.handleDeleteLineBtnClick();
+  if (key == 'x' || key == 'X') editLinesManager.handleDeleteLineBtnClick();
 }
 
 void handleProcessingLinesKeyActions() {
