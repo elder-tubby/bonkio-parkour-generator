@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name         pkrGeneratorX
-// @version      0.1.0
+// @version      0.1.1
 // @description  A mod to select maps and control a timer in Bonk.io using BonkHUD
 // @author       You
 // @match        https://bonk.io/gameframe-release.html
@@ -18,7 +18,7 @@ const CONFIG = {
     MOD_VERSION: "0.1.0",
     BONK_LIB_VERSION: "1.1.3",
     BONK_VERSION: "49",
-    API_BASE_URL: "https://raw.githubusercontent.com/elder-tubby/parkour-gen-browser-script",
+    API_BASE_URL: "https://raw.githubusercontent.com/elder-tubby/bonkio-parkour-generator/main/browser-script/map-data",
     MAP_LOAD_DELAY: 2000,
     BATCH_SIZE: 100,
     COUNTDOWN_ALERTS: [10, 3, 2, 1],
@@ -182,7 +182,7 @@ pkrGeneratorX.timerModule = {
 
     async handleTimerEnd() {
         try {
-            await pkrGeneratorX.mapManager.selectAndStartRandomMap();
+            await pkrGeneratorX.mapManager.selectAndStartNextMap();
 
             if (this.loopDuration) {
                 this.isRunning = false;
@@ -271,7 +271,7 @@ pkrGeneratorX.chatManager = {
 // Map Fetcher
 pkrGeneratorX.mapFetcher = {
     async fetchMapsStructure() {
-        const url = `${CONFIG.API_BASE_URL}/main/map-data/groups.json${Utils.getCacheQuery()}`;
+        const url = `${CONFIG.API_BASE_URL}/groups.json${Utils.getCacheQuery()}`;
 
         try {
             const response = await fetch(url);
@@ -298,7 +298,7 @@ pkrGeneratorX.mapFetcher = {
             return null;
         }
 
-        const url = `${CONFIG.API_BASE_URL}/refs/heads/main/map-data/${mapId}.json${Utils.getCacheQuery()}`;
+        const url = `${CONFIG.API_BASE_URL}/${mapId}.json${Utils.getCacheQuery()}`;
 
         try {
             const response = await fetch(url);
@@ -316,7 +316,7 @@ pkrGeneratorX.mapFetcher = {
     },
 
     async fetchRandomMapAndAuthorNames() {
-        const url = `${CONFIG.API_BASE_URL}/refs/heads/main/map-data/mapAndAuthorNames.json${Utils.getCacheQuery()}`;
+        const url = `${CONFIG.API_BASE_URL}/mapAndAuthorNames.json${Utils.getCacheQuery()}`;
 
         try {
             const response = await fetch(url);
