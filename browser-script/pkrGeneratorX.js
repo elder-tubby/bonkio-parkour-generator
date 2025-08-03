@@ -104,6 +104,7 @@ window.pkrGeneratorX = {
     state: {
         chatAlerts: false,
         keepPositions: false,
+        linearMapSelection: false,
         selectedGroup: null,
         selectedMapId: null,
         type: 1,
@@ -555,28 +556,46 @@ pkrGeneratorX.mapManager = {
         }
     },
 
-    async selectAndStartRandomMap() {
-        // console.log("[MapManager] Selecting random map");
-
+    async selectAndStartNextMap() {
         try {
             const state = pkrGeneratorX.state;
             const typeKey = `Type ${state.type}`;
             const groupMaps = (pkrGeneratorX._mapsStructure[typeKey] || {})[state.selectedGroup] || [];
 
-            const availableMaps = groupMaps.filter(m => m.mapId !== state.selectedMapId);
-            if (availableMaps.length === 0) {
-                console.warn("[MapManager] No alternate maps available");
+            if (groupMaps.length === 0) {
+                console.warn("[MapManager] No maps available in group");
                 return;
             }
 
-            const randomMap = availableMaps[Math.floor(Math.random() * availableMaps.length)];
-            // console.log("[MapManager] Selected random map:", randomMap);
+            let nextMap = null;
 
-            state.selectedMapId = randomMap?.mapId;
+            if (state.linearMapSelection) {
+                const currentIndex = groupMaps.findIndex(m => m.mapId === state.selectedMapId);
+                const nextIndex = (currentIndex + 1) % groupMaps.length;
+
+                if (groupMaps[nextIndex].mapId === state.selectedMapId && groupMaps.length > 1) {
+                    // In case all maps are the same or only one map, avoid infinite loop
+                    nextMap = groupMaps[(nextIndex + 1) % groupMaps.length];
+                } else {
+                    nextMap = groupMaps[nextIndex];
+                }
+
+                console.log("[MapManager] Linear next map:", nextMap);
+            } else {
+                const available = groupMaps.filter(m => m.mapId !== state.selectedMapId);
+                if (!available.length) {
+                    console.warn("[MapManager] No alternate maps available.");
+                    return;
+                }
+                nextMap = available[Math.floor(Math.random() * available.length)];
+                // console.log("[MapManager] Random map:", nextMap);
+            }
+
+            state.selectedMapId = nextMap.mapId;
             this.updateMapDropdown();
             await this.createAndStartMap();
         } catch (error) {
-            console.error("[MapManager] Error selecting random map:", error);
+            console.error("[MapManager] Error selecting next map:", error);
         }
     },
 
@@ -814,6 +833,7 @@ pkrGeneratorX.createWindow = function () {
 pkrGeneratorX.setWindowContent = function () {
     const chatAlertsChecked = this.state.chatAlerts ? "checked" : "";
     const keepPositionsChecked = this.state.keepPositions ? "checked" : "";
+    const linearMapSelectionChecked = this.state.linearMapSelection ? 'checked' : '';
 
     const container = document.createElement("div");
     container.innerHTML = `
@@ -888,6 +908,14 @@ pkrGeneratorX.setWindowContent = function () {
                     </label>
                 </td>
             </tr>
+            <tr>
+    <td class="bonkhud-text-color">
+        <label>
+            <input type="checkbox" id="pkr-linear-selection" ${linearMapSelectionChecked}/> Linear map selection
+        </label>
+    </td>
+</tr>
+
         </table>
     `;
 
@@ -929,7 +957,7 @@ pkrGeneratorX.bindUI = function () {
     groupSelect.addEventListener("change", () => {
         const selectedGroup = groupSelect.value;
         this.state.selectedGroup = selectedGroup;
-       // console.log("[UI] Group selected:", selectedGroup);
+        // console.log("[UI] Group selected:", selectedGroup);
 
         const groupMaps = (this._mapsStructure["Type 1"] || {})[selectedGroup] || [];
         // console.log("[UI] Maps for group:", groupMaps);
@@ -967,6 +995,17 @@ pkrGeneratorX.bindUI = function () {
             // console.log("Chat alerts:", this.state.chatAlerts);
         });
     }
+
+    const linearSelectionCheckbox = this.getElement("pkr-linear-selection");
+    if (linearSelectionCheckbox) {
+        linearSelectionCheckbox.addEventListener("change", (event) => {
+            this.state.linearMapSelection = event.target.checked;
+            // console.log("linearSelectionCheckbox:", this.state.linearSelectionCheckbox);
+        });
+    }
+
+
+
 
     updateCreateButton();
 };
