@@ -69,7 +69,7 @@
   "floorHeight": [35.93000030517578],
   "lineToMoveConnectPointEnd": [1],
   "maxLineHeight": [55.88999938964844],
-  "chancesForNonDLinesToConnect": [0.19499999284744263],
+  "chancesForNonDLinesToConnect": [0.03999999910593033],
   "lineConnectAngleEnd": [0],
   "addBackground": [true],
   "areFramesBouncy": [false],
