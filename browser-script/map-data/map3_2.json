@@ -901,7 +901,7 @@
       "width": 16.077515,
       "isNoJump": false,
       "isFrame": false,
-      "y": 429,
+      "y": 427,
       "angle": 270,
       "isFloor": false,
       "id": 42,
@@ -1727,5 +1727,6 @@
       "isBouncy": false,
       "height": 66
     }
-  ]
+  ],
+  "version": 1
 }

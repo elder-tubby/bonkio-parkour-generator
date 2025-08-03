@@ -1232,7 +1232,7 @@ class LineManager implements Runnable {
 
       PVector randomPoint = getRandomPointOnLine(lineToConnectWith, lineToMove);
       if (isPointWithinCanvas(randomPoint)) {
-        
+
         updateLineAngle(lineToMove, lineToConnectWith, randomPoint);
         moveLineToTouch(lineToMove, randomPoint, lineToConnectWith);
         addConnectedLinePair(lineToMove, lineToConnectWith);
@@ -1583,7 +1583,7 @@ class LineManager implements Runnable {
     float t = getPointOfConnection(lineToConnectWith, lineToMove);
     //return new PVector(edgePoints[0].x + t * (edgePoints[1].x - edgePoints[0].x),
     //  edgePoints[0].y + t * (edgePoints[1].y - edgePoints[0].y));
-      return new PVector(edgePoints[0].x + t * (edgePoints[1].x - edgePoints[0].x),
+    return new PVector(edgePoints[0].x + t * (edgePoints[1].x - edgePoints[0].x),
       edgePoints[0].y + t * (edgePoints[1].y - edgePoints[0].y));
   }
 
@@ -1756,6 +1756,47 @@ class LineManager implements Runnable {
     lines.addAll(otherLines);
     lines.addAll(bouncyLines);
   }
+
+  void moveFramesToFront() {
+    CopyOnWriteArrayList<Line> frameLines = new CopyOnWriteArrayList<Line>();
+    CopyOnWriteArrayList<Line> otherLines = new CopyOnWriteArrayList<Line>();
+
+    // Separate lines into frame and non-frame
+    for (Line line : lines) {
+      if (line.isFrame) {
+        frameLines.add(line);
+      } else {
+        otherLines.add(line);
+      }
+    }
+
+    // Clear the original list and add frame lines first
+    lines.clear();
+    lines.addAll(otherLines);
+    lines.addAll(frameLines);
+  }
+
+
+  void moveFloorsToFront() {
+    CopyOnWriteArrayList<Line> floorLines = new CopyOnWriteArrayList<Line>();
+    CopyOnWriteArrayList<Line> otherLines = new CopyOnWriteArrayList<Line>();
+
+    // Separate lines into floor and non-floor
+    for (Line line : lines) {
+      if (line.isFloor) {
+        floorLines.add(line);
+      } else {
+        otherLines.add(line);
+      }
+    }
+
+    // Clear the original list and add floor lines first
+    lines.clear();
+    lines.addAll(otherLines);
+    
+    lines.addAll(floorLines);
+  }
+
 
   void moveDLinesToFront() {
     CopyOnWriteArrayList<Line> deathLines = new CopyOnWriteArrayList<Line>();
@@ -2722,7 +2763,11 @@ class LineManager implements Runnable {
   void moveLinesForwardOrBackward() {
     moveDLinesToFrontOrBack();
     moveBLinesToFrontOrBack();
+
+    moveFloorsToFront();
+    moveFramesToFront();
     moveBgLinesToBack();
+
     moveLinesForProgramToFront();
   }
 }
