@@ -1761,6 +1761,27 @@ class LineManager implements Runnable {
     lines.addAll(otherLines);
     //}
   }
+
+
+  void moveSelectableNoPhysicsToBack() {
+    CopyOnWriteArrayList<Line> selectableLines = new CopyOnWriteArrayList<Line>();
+    CopyOnWriteArrayList<Line> otherLines = new CopyOnWriteArrayList<Line>();
+
+    // Separate lines into selectableNoPhysics and others
+    for (Line line : lines) {
+      if (line.isSelectableNoPhysics) {
+        selectableLines.add(line);
+      } else {
+        otherLines.add(line);
+      }
+    }
+
+    // Rebuild the list: non-selectable lines first, selectableNoPhysics lines last
+    lines.clear();
+    lines.addAll(selectableLines);
+    lines.addAll(otherLines);
+  }
+
   void moveBLinesToFront() {
     CopyOnWriteArrayList<Line> bouncyLines = new CopyOnWriteArrayList<Line>();
     CopyOnWriteArrayList<Line> otherLines = new CopyOnWriteArrayList<Line>();
@@ -2787,7 +2808,7 @@ class LineManager implements Runnable {
   void moveLinesForwardOrBackward() {
     moveDLinesToFrontOrBack();
     moveBLinesToFrontOrBack();
-
+    moveSelectableNoPhysicsToBack();
     moveFloorsToFront();
     moveFramesToFront();
     moveBgLinesToBack();

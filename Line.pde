@@ -76,7 +76,9 @@ class Line {
 
   void setColors() {
     //lineColor = getRandomColor((int)random(numOfColorSchemesAvailable));
-    if (isDeath && !hasGrapple)
+    if (isSelectableNoPhysics) {
+      lineColor = color(50, 100, 90);
+    } else if (isDeath && !hasGrapple)
       lineColor = settings.deathColor;
     else if (isBouncy && !hasGrapple)
       lineColor = settings.bouncyColor;
@@ -96,7 +98,7 @@ class Line {
   }
 
   void drawLine(boolean isSelected) {
-    if (!noPhysics)
+    if (!noPhysics || isSelectableNoPhysics)
       setColors();
 
     pushMatrix();
