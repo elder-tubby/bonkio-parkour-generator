@@ -152,9 +152,10 @@ void handleGenerateKeyActions() {
     if (key == 'f') generateBtnManager.handleGenerateFloorsClick();
     else if (key == 'l') generateBtnManager.handleGenerateLinesClick();
     else if (key == 'c') editLinesManager.handleCopyLineDataBtnClick();
+
+    if (key == 'a') editLinesManager.handleAddNewLineBtnClick();
     if (selectedLine == null && (multiSelectedLines == null || multiSelectedLines.isEmpty())) {
       if (key == 'g') generate();
-      if (key == 'a') editLinesManager.handleAddNewLineBtnClick();
     } else {
     }
   }
@@ -227,7 +228,7 @@ void handleProcessingLinesKeyActions() {
 
 
 void updateLinePosition(Line line) {
-  if (line.noPhysics) return;
+  if (line.noPhysics && !line.isSelectableNoPhysics) return;
   cp5.getController("lineDataCopiedLabel").hide();
   line.centerX = mouseX - dragOffsetX;
   line.centerY = mouseY - dragOffsetY;
@@ -236,7 +237,7 @@ void updateLinePosition(Line line) {
 void mousePressed() {
   lineManager.updateNoPhysicsDuplicatesColor(); // Can't figure out where else to place it. This line is why noPhysicsDplicates change color on every mouse press.
 
-  if (selectedLine != null && mouseX < startOfWidth - 50)
+  if (selectedLine != null && mouseX < startOfWidth - 50 && !editLinesManager.isMouseOverSetAsSelectableNoPhysicsBtn())
     selectedLine = null;
 
   if (shouldSkipMouseSelection()) return;
@@ -289,7 +290,7 @@ boolean shouldSkipMouseSelection() {
 
 boolean selectLine(Line line) {
   //if (line.noPhysics && !isControlPressed) {
-  if (line.noPhysics) {
+  if (line.noPhysics && !line.isSelectableNoPhysics) {
     selectedLine = null;
     multiSelectedLines.clear(); // Deselect everything
     //} else if (!line.noPhysics) {
@@ -350,7 +351,7 @@ void updateMultiSelection() {
   float selBottom = max(selectionStart.y, selectionEnd.y);
 
   for (Line line : lines) {
-    if (!line.noPhysics && lineIntersectsSelection(line, selLeft, selTop, selRight, selBottom)) {
+    if ((!line.noPhysics || line.isSelectableNoPhysics) && lineIntersectsSelection(line, selLeft, selTop, selRight, selBottom)) {
       multiSelectedLines.add(line);
       cp5.getController("lineDataCopiedLabel").hide();
     }

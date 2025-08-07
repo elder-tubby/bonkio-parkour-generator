@@ -20,6 +20,7 @@ class Line {
   boolean isOnlyForProgram;
   boolean isCapzone;
   boolean isNoJump;
+  boolean isSelectableNoPhysics;
 
   Line(float x, float y, float w, float h, float a, boolean death) {
     centerX = x;
@@ -288,6 +289,23 @@ class Line {
     else
       lineColor = settings.nonDeathColor;
   }
+
+  void setAsSelectableNoPhysics() {
+    isSelectableNoPhysics = true;
+    noPhysics = true;
+
+    isDeath = false;
+    isDeathOgValue = false;
+    isBouncy = false;
+    hasGrapple = false;
+    isFrame = false;
+    isFloor = false;
+    isBgLine = false;
+    isOnlyForProgram = false;
+    isCapzone = false;
+    isNoJump = false;
+  }
+
 
   void makeDeath() {
     isCapzone = false;

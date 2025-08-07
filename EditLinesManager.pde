@@ -513,9 +513,14 @@ class EditLinesManager {
     }
     saveLineAttributes();
   }
+  boolean isMouseOverSetAsSelectableNoPhysicsBtn() {
+    Controller<?> btn = cp5.getController("setAsSelectableNoPhysicsBtn");
+    return btn != null && btn.isMouseOver();
+  }
 
   boolean isMouseOverSlider() {
     boolean returnValue = false;
+
     for (Controller controller : lineProperties) {
       returnValue = controller.isMouseOver();
       if (returnValue) break;

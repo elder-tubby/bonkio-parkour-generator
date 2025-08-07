@@ -987,8 +987,31 @@ class LineManager implements Runnable {
     // Randomly determine if the line is a death line
     isDeath = random(1) < settings.chancesOfDeath[0];
 
-    x = random(startOfWidth, endOfWidth);
-    y = random(startOfHeight, endOfHeight);
+    boolean valid;
+
+    do {
+      // 1) Pick a candidate at random
+      x = random(startOfWidth, endOfWidth);
+      y = random(startOfHeight, endOfHeight);
+
+      valid = true;
+
+      // 2) Test against each forbidden line‐region
+      for (Line l : lines) {
+        if (l.isSelectableNoPhysics) {
+          if (pointInRotatedRect(x, y, l.centerX, l.centerY, l.width, l.height, l.angle)) {
+            valid = false;
+            break;
+          }
+        }
+      }
+
+      // 3) Repeat until our point is valid
+    } while (!valid);
+
+    // at this point, pickX/pickY is guaranteed to lie outside all forbidden regions
+
+
     w = getWidthOfLine();
     h = getHeightOfLine();
     a = getLineAngle(isDeath);
@@ -1047,7 +1070,7 @@ class LineManager implements Runnable {
     //println("counterForIsTooClose: " + counterForIsTooClose++);
 
     for (Line existingLine : lines) {
-      if (existingLine.noPhysics) continue;
+      if (existingLine.noPhysics && !existingLine.isSelectableNoPhysics) continue;
 
       //  println("in isTooCloseToOtherLines: " + ++counterForTrackingControl);
       //  println("length of 'lines': " + lines.size());
@@ -1055,7 +1078,7 @@ class LineManager implements Runnable {
 
       if (areLinesConnected(existingLine, newLine)) continue;
 
-      if (!settings.canLinesOverlap[0]) {
+      if (!settings.canLinesOverlap[0] || existingLine.isSelectableNoPhysics) {
         if (isOverlapping(newLine, existingLine)) {
           //println("is overlapping: " + counterForOverlap++);
           return true;
@@ -2770,5 +2793,42 @@ class LineManager implements Runnable {
     moveBgLinesToBack();
 
     moveLinesForProgramToFront();
+  }
+
+  /**
+   * Returns true if (px,py) lies inside the rectangle centered at (cx,cy),
+   * of dimensions w×h, rotated by angle θ (radians).
+   */
+  boolean pointInRotatedRect(float px, float py,
+    float cx, float cy,
+    float w, float h,
+    float angleDeg) {
+    // Build world-space corners
+    float theta = radians(angleDeg);
+    float cosT = cos(theta), sinT = sin(theta);
+    float hw = w/2, hh = h/2;
+    PVector[] corners = {
+      new PVector(-hw, -hh),
+      new PVector( hw, -hh),
+      new PVector( hw, hh),
+      new PVector(-hw, hh)
+    };
+    for (int i = 0; i < 4; i++) {
+      float x = corners[i].x * cosT - corners[i].y * sinT + cx;
+      float y = corners[i].x * sinT + corners[i].y * cosT + cy;
+      corners[i].set(x, y);
+    }
+
+    // Cross-product sign test
+    boolean hasNeg = false, hasPos = false;
+    for (int i = 0; i < 4; i++) {
+      PVector a = PVector.sub(corners[(i+1)%4], corners[i]);
+      PVector b = PVector.sub(new PVector(px, py), corners[i]);
+      float cross = a.cross(b).z;
+      if (cross < 0) hasNeg = true;
+      else if (cross > 0) hasPos = true;
+      if (hasNeg && hasPos) return false;  // point is outside
+    }
+    return true;  // all crosses same sign → inside
   }
 }

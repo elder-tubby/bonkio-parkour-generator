@@ -63,6 +63,7 @@ void saveLineAttributes() {
     lineObject.put("isBouncy", line.isBouncy); // Add to JSON
     lineObject.put("color", colorString);
     lineObject.put("noPhysics", noPhysics);
+    lineObject.put("isSelectableNoPhysics", line.isSelectableNoPhysics);
     lineObject.put("noGrapple", noGrapple);
     lineObject.put("isCapzone", line.isCapzone);
     lineObject.put("isNoJump", line.isNoJump);
@@ -236,6 +237,9 @@ void handlePasteLineDataBtnClick() {
 
     newLine.noPhysics = lineData.hasKey("noPhysics") && lineData.get("noPhysics") != null
       ? lineData.getBoolean("noPhysics") : false;
+
+    newLine.isSelectableNoPhysics = lineData.hasKey("isSelectableNoPhysics") && lineData.get("isSelectableNoPhysics") != null
+      ? lineData.getBoolean("isSelectableNoPhysics") : false;
 
     newLine.hasGrapple = lineData.hasKey("noGrapple") && lineData.get("noGrapple") != null
       ? !lineData.getBoolean("noGrapple") : true;  // Default to true if "noGrapple" is missing or null

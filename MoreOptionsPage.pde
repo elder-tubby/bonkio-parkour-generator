@@ -25,11 +25,12 @@ class MoreOptionsPage {
     createExchangeBAndDLinesBtn();
     createZoomBtns();
     createToggleScriptManagerBtn();
+    createSetAsSelectableNoPhysicsBtn();
     return elements;
   }
 
   void createDeathAroundPathButton() {
-    
+
     println("uiIndexInColumn " + uiIndexInColumn);
 
     elements.add(cp5.addButton("deathAroundPathButton")
@@ -173,6 +174,32 @@ class MoreOptionsPage {
     ));
     uiIndexInColumn++;
   }
+
+  void createSetAsSelectableNoPhysicsBtn() {
+
+    elements.add(cp5.addButton("setAsSelectableNoPhysicsBtn")
+      .setPosition(xPos, startingYPos + verticalGap * uiIndexInColumn)
+      .setSize(elementWidth, elementHeight)
+      .setFont(defaultFont)
+      .setLabel("set selected lines as selectable no-physics")
+      .onClick(new CallbackListener() {
+      public void controlEvent(CallbackEvent e) {
+        setAsSelectableNoPhysics();
+      }
+    }
+    ));
+    uiIndexInColumn++;
+  }
+
+  void setAsSelectableNoPhysics() {
+    if (selectedLine != null)
+      selectedLine.setAsSelectableNoPhysics();
+    if (multiSelectedLines != null && !multiSelectedLines.isEmpty())
+      for (Line l : multiSelectedLines) {
+        l.setAsSelectableNoPhysics();
+      }
+  }
+
 
   void exchangeBAndDLines() {
     // Iterate through the lines list to find all lines that are death
