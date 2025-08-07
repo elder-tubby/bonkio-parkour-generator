@@ -292,7 +292,7 @@ void handlePasteLineDataBtnClick() {
 
   matchProgramColorsToPastedDataColors();
   lineManager.moveLinesForwardOrBackward();
-  lineManager.updateNoPhysicsPlatsColor();
+  lineManager.updateNoPhysicsDuplicatesColor();
 
   // Optional: Provide feedback to the user that the lines were pasted and processed
   println("Lines have been successfully pasted and added!");

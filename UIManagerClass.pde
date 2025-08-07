@@ -21,13 +21,7 @@ class UIManager {
   }
 
   void setupCommonUI() {
-
-    Textlabel multiSelectionLabel = cp5.addTextlabel("multiSelectionLabel")
-      .setPosition(endOfWidth - 90, 20)
-      .setFont(createFont("Tw Cen MT Bold", 10))
-      .setText("VERSION " + version);
-
-
+    drawVersionLabel();
     setupTabs(); // also creates BG inside customMapPage .initialize()
     generateBtnManager.setupGenerateButtons();
     setupNoOfLinesSlider();

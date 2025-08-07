@@ -234,7 +234,7 @@ void updateLinePosition(Line line) {
 }
 
 void mousePressed() {
-  lineManager.updateNoPhysicsPlatsColor(); // Can't figure out where else to place it. This line is why noPhysicsDplicates change color on every mouse press.
+  lineManager.updateNoPhysicsDuplicatesColor(); // Can't figure out where else to place it. This line is why noPhysicsDplicates change color on every mouse press.
 
   if (selectedLine != null && mouseX < startOfWidth - 50)
     selectedLine = null;
@@ -288,9 +288,15 @@ boolean shouldSkipMouseSelection() {
 }
 
 boolean selectLine(Line line) {
+  //if (line.noPhysics && !isControlPressed) {
   if (line.noPhysics) {
     selectedLine = null;
     multiSelectedLines.clear(); // Deselect everything
+    //} else if (!line.noPhysics) {
+    //  if (isControlPressed && selectedLine != null) {
+    //    multiSelectedLines.add(selectedLine);
+    //    multiSelectedLines.add(line);
+    //    selectedLine = null;
   } else {
     selectedLine = line;
     multiSelectedLines.clear();
@@ -298,6 +304,7 @@ boolean selectLine(Line line) {
     editLinesManager.updateSlidersAndToggles();
     return true;
   }
+
   return false;
 }
 

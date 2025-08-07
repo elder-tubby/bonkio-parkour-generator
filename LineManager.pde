@@ -1777,6 +1777,7 @@ class LineManager implements Runnable {
   }
 
 
+
   void moveFloorsToFront() {
     CopyOnWriteArrayList<Line> floorLines = new CopyOnWriteArrayList<Line>();
     CopyOnWriteArrayList<Line> otherLines = new CopyOnWriteArrayList<Line>();
@@ -1793,7 +1794,7 @@ class LineManager implements Runnable {
     // Clear the original list and add floor lines first
     lines.clear();
     lines.addAll(otherLines);
-    
+
     lines.addAll(floorLines);
   }
 
@@ -2287,7 +2288,7 @@ class LineManager implements Runnable {
   }
 
 
-  void updateNoPhysicsPlatsColor() {
+  void updateNoPhysicsDuplicatesColor() {
     if (!settings.addNoPhysicsLineDuplicates[0] || noPhysicsDuplicateLineMap == null)  return;
     removeNoPhysicsDuplicatesFromLines();
     duplicateAndScaleDownLines(lines);

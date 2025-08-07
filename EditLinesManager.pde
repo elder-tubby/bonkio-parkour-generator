@@ -54,6 +54,7 @@ class EditLinesManager {
 
     if (hasSelectedLine) {
       hideControllers(otherOptions);
+      hideMultiSelectionText();
       bgButtonManager.hide();
       showControllers(lineProperties);
       updateSlidersAndToggles();
@@ -431,10 +432,8 @@ class EditLinesManager {
         line.setColors();
     }
 
-    lineManager.removeNoPhysicsDuplicatesFromLines();
-    if (settings.addNoPhysicsLineDuplicates[0]) {
-      lineManager.duplicateAndScaleDownLines(lines);
-    }
+    lineManager.updateNoPhysicsDuplicatesColor();
+
     //lineManager.moveLinesForwardOrBackward();
   }
 

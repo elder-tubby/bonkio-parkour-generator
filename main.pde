@@ -82,7 +82,7 @@ void setup() {
 
 
   currentPreset = "do not delete - default " + int(random(1, 7));
- 
+
   settings.importPreset(currentPreset, false);
   generateBtnManager = new GenerateBtnManager();
   uiManager = new UIManager();
@@ -108,6 +108,13 @@ void draw() {
   drawColorIndicator();
   editLinesManager.updateEditLineUI();
   generateBtnManager.updateGenerateButtonsUI();
+}
+
+void drawVersionLabel() {
+  Textlabel versionLabel = cp5.addTextlabel("versionLabel")
+    .setPosition(endOfWidth - 90, 20)
+    .setFont(createFont("Tw Cen MT Bold", 10))
+    .setText("VERSION " + version);
 }
 
 void drawSpawn() {
