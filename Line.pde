@@ -21,6 +21,8 @@ class Line {
   boolean isCapzone;
   boolean isNoJump;
   boolean isSelectableNoPhysics;
+  boolean isLeft; // used for generating lines around player path
+  boolean isRight;
 
   Line(float x, float y, float w, float h, float a, boolean death) {
     centerX = x;
@@ -37,6 +39,7 @@ class Line {
     friction = 0;
     isCapzone = false;
     isNoJump = false;
+
 
     removeBounceAndDeathIfHasGrapple();
 

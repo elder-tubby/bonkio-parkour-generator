@@ -284,7 +284,7 @@ class LineManager implements Runnable {
     float boxWidth = 15;
     float necessaryGapNotSureWhyItsNeeded = 8;
     float minPossibleGap = getSpawnRadius() * 2 + boxSize + necessaryGapNotSureWhyItsNeeded;
-    int skipPoints = 1; // Skip every 20 points to reduce lag
+    int skipPoints = 1;
     //minPossibleGap = 20;
 
 
@@ -308,7 +308,9 @@ class LineManager implements Runnable {
       PVector deathRight = PVector.sub(pointA, perpendicular);
 
       Line leftDeath = new Line(deathLeft.x, deathLeft.y, boxWidth, boxSize, angle, true);
+      leftDeath.isLeft = true;
       Line rightDeath = new Line(deathRight.x, deathRight.y, boxWidth, boxSize, angle, true);
+      rightDeath.isRight = true;
       if (!isDeathOnPath) {
         // Ensure valid placement
         if (isValidDeathLineAroundPath(leftDeath, convertedPoints, deathLines)) {
@@ -328,7 +330,102 @@ class LineManager implements Runnable {
       }
     }
 
+    delay(1000);
+    //for (Line l : lines)
+      //if (!l.isOnlyForProgram && !l.isBgLine) lines.remove(l);
+    ////// Sample lines added temporarily
+    //Line sampleLine1 = new Line(startOfWidth + 300, startOfHeight + 300, boxWidth, boxSize, 0, true);
+    //sampleLine1.isLeft = true;
+    //Line sampleLine2 = new Line(startOfWidth + 350, startOfHeight + 300, boxWidth, boxSize, 20, true);
+    //sampleLine2.isLeft = true;
+    //Line sampleLine3 = new Line(startOfWidth + 400, startOfHeight + 300, boxWidth, boxSize, 20, true);
+    //sampleLine3.isLeft = true;
+    //Line sampleLineX = new Line(startOfWidth + 330, startOfHeight + 100, boxWidth, boxSize, 0, true);
+
+    //Line sampleLine4 = new Line(920, 200.5, 100, 2, 90, true);
+    //sampleLine4.isLeft = true;
+
+    //Line sampleLine5 = new Line(919, 270, 15, 2, 90, true);
+    //sampleLine5.isLeft = true;
+
+    //Line sampleLine6 = new Line(919, 296, 15, 2, 90, true);
+    //sampleLine6.isLeft = true;
+
+    //Line sampleLine7 = new Line(854, 212, 15, 2, 90, true);
+    //sampleLine7.isLeft = true;
+
+    //Line sampleLine8 = new Line(854, 239, 15, 2, 85, true);
+    //sampleLine8.isLeft = true;
+
+    //Line sampleLine9 = new Line(879, 270, 15, 2, 0, true);
+    //sampleLine9.isLeft = true;
+
+    //Line sampleLine10 = new Line(909, 275, 15, 2, 0, true);
+    //sampleLine10.isLeft = true;
+
+    //Line sampleLine11 = new Line(946.7171, 256.9057, 15, 2, -71.56505, true);
+    //sampleLine11.isLeft = true;
+
+    //Line sampleLine12 = new Line(949, 230, 15, 2, -90, true);
+    //sampleLine12.isLeft = true;
+
+    //lines.add(sampleLine1);
+    //lines.add(sampleLine2);
+    //lines.add(sampleLine3);
+    //lines.add(sampleLine7);
+    //lines.add(sampleLine8);
+    //lines.add(sampleLine9);
+    //lines.add(sampleLine10);
+    //lines.add(sampleLine11);
+    //lines.add(sampleLine12);
+
+
+    //    lines.add(sampleLine4);
+    //    lines.add(sampleLine5);
+    //    lines.add(sampleLine6);
+
+
+    //    // Wait 2 seconds (2000 milliseconds)
+    //delay(1000);
+
+    //    // Remove them from lines
+    //    lines.remove(sampleLine4);
+    //    lines.remove(sampleLine5);
+    //    lines.remove(sampleLine6);
+    //    deathLines.add(sampleLine4);
+    //    deathLines.add(sampleLine5);
+    //    deathLines.add(sampleLine6);
+
+    //// Remove individual lines from 'lines'
+    //lines.remove(sampleLine7);
+    //lines.remove(sampleLine8);
+    //lines.remove(sampleLine9);
+    //lines.remove(sampleLine10);
+    //lines.remove(sampleLine11);
+    //lines.remove(sampleLine12);
+
+    //// Add the merged line (sampleLineX) to lines
+    //lines.add(sampleLineX);
+
+    //// Add original lines to deathLines for processing
+    //deathLines.add(sampleLine7);
+    //deathLines.add(sampleLine8);
+    //deathLines.add(sampleLine9);
+    //deathLines.add(sampleLine10);
+    //deathLines.add(sampleLine11);
+    //deathLines.add(sampleLine12);
+
+
+    //mergeDeathLines(deathLines);
+    //    // Add merged death lines back to lines
     //lines.addAll(deathLines);
+
+
+    lines.removeAll(deathLines);
+    // Merge similar death lines after generating them
+    mergeDeathLines(deathLines);
+    lines.addAll(deathLines);
+
     moveLinesForwardOrBackward();
     if (settings.addNoPhysicsLineDuplicates[0]) {
       removeNoPhysicsDuplicatesFromLines();
@@ -340,6 +437,124 @@ class LineManager implements Runnable {
     isProcessingLines = false;
     println("Death line generation complete.");
   }
+  /**
+   * Merge runs of near-collinear deathLines into single longer lines.
+   */
+  // --- MERGE PASS (drop this in right after you build deathLines) ---
+
+
+  // --- TOP-LEVEL HELPERS (put these at sketch scope, not nested) ---
+
+  void mergeDeathLines(ArrayList<Line> deathLines) {
+    float angleThresh = 15;  // degrees
+    float gap         = 80;  // extra gap allowance
+
+    ArrayList<Line> lefts  = new ArrayList<Line>();
+    ArrayList<Line> rights = new ArrayList<Line>();
+    for (Line L : deathLines) {
+      if (L.isLeft) lefts.add(L);
+      else if (L.isRight) rights.add(L);
+    }
+
+    ArrayList<Line> merged = new ArrayList<Line>();
+    merged.addAll( mergeLineGroup(lefts, angleThresh, gap) );
+    merged.addAll( mergeLineGroup(rights, angleThresh, gap) );
+
+    deathLines.clear();
+    deathLines.addAll(merged);
+  }
+
+  ArrayList<Line> mergeLineGroup(ArrayList<Line> group, float angleThresh, float gap) {
+    ArrayList<Line> out = new ArrayList<Line>();
+    if (group.isEmpty()) return out;
+
+    // ← REMOVE this whole sorting block ←
+    // float refAng = group.get(0).angle;
+    // boolean sortByX = abs(cos(radians(refAng))) > abs(sin(radians(refAng)));
+    // if (sortByX) {
+    //   group.sort((a, b) -> Float.compare(a.centerX, b.centerX));
+    // } else {
+    //   group.sort((a, b) -> Float.compare(a.centerY, b.centerY));
+    // }
+
+    // 2) sweep & merge in generation order
+    Line curr = group.get(0);
+    for (int i = 1; i < group.size(); i++) {
+      Line next = group.get(i);
+
+      // angle‐folded check (unchanged)
+      float raw   = abs(angleDiff(curr.angle, next.angle));
+      float norm  = raw > 180 ? 360 - raw : raw;
+      float odiff = min(norm, abs(norm - 180));
+      if (odiff > angleThresh) {
+        out.add(curr);
+        curr = next;
+        continue;
+      }
+
+      // distance check (unchanged)
+      float dist = distanceBetweenLines(curr, next);
+      if (dist <= gap) {
+        curr = mergeTwoLines(curr, next, PVector.fromAngle(radians(curr.angle)).normalize());
+      } else {
+        out.add(curr);
+        curr = next;
+      }
+    }
+    out.add(curr);
+    return out;
+  }
+
+
+  /** Merge a & b (assumes same angle), using dir = unit vector of that angle. */
+  Line mergeTwoLines(Line a, Line b, PVector dir) {
+    // get perp offset from first line so side stays correct
+    PVector centerA = new PVector(a.centerX, a.centerY);
+    float projA = PVector.dot(centerA, dir);
+    PVector perpOffset = PVector.sub(centerA, PVector.mult(dir, projA));
+
+    // project both centers
+    float pA = projA;
+    float pB = PVector.dot(new PVector(b.centerX, b.centerY), dir);
+
+    // endpoints
+    float minProj = min(pA - a.width/2, pB - b.width/2);
+    float maxProj = max(pA + a.width/2, pB + b.width/2);
+
+    float newWidth = maxProj - minProj;
+    float midProj  = (minProj + maxProj) / 2;
+    PVector newCenter = PVector.add(PVector.mult(dir, midProj), perpOffset);
+
+    // Normalize both into [0..180)
+    float aNorm = (a.angle % 180 + 180) % 180;
+    float bNorm = (b.angle % 180 + 180) % 180;
+
+    // If they're 'wrapped' around the 0/180 boundary, shift one up by 180 to get a small difference
+    if (abs(aNorm - bNorm) > 90) {
+      if (aNorm < bNorm) aNorm += 180;
+      else               bNorm += 180;
+    }
+
+    // Now average and fold back into [0..180)
+    float midNorm = ((aNorm + bNorm) / 2) % 180;
+
+    // Use that as your merged angle
+    float midAngle = midNorm;
+    //float midAngle = a.angle;
+    Line merged = new Line(newCenter.x, newCenter.y,
+      newWidth, a.height,
+      midAngle, true);
+    merged.isLeft = a.isLeft;
+    return merged;
+  }
+
+  /** Minimal signed difference between two angles (-180..180) */
+  float angleDiff(float a, float b) {
+    float d = (a - b + 180) % 360 - 180;
+    return d < -180 ? d + 360 : d;
+  }
+
+
 
   boolean isValidDeathLineAroundPath(Line newLine, ArrayList<PVector> points, ArrayList<Line> existingDeathLines) {
     for (PVector point : points) {
