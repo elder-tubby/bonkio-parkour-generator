@@ -446,8 +446,8 @@ class LineManager implements Runnable {
   // --- TOP-LEVEL HELPERS (put these at sketch scope, not nested) ---
 
   void mergeDeathLines(ArrayList<Line> deathLines) {
-    float angleThresh = 15;  // degrees
-    float gap         = 80;  // extra gap allowance
+    float angleThresh = 10;  // degrees
+    float gap         = 50;  // extra gap allowance
 
     ArrayList<Line> lefts  = new ArrayList<Line>();
     ArrayList<Line> rights = new ArrayList<Line>();

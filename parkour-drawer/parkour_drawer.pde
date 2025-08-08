@@ -1,4 +1,4 @@
-  import processing.data.JSONArray;
+import processing.data.JSONArray;
 import processing.data.JSONObject;
 import java.awt.datatransfer.*;
 import java.awt.Toolkit;
@@ -215,28 +215,27 @@ float distToSegment(float px, float py, float x1, float y1, float x2, float y2) 
   return dist(px, py, projX, projY);
 }
 
-// Updated eraseAt() function: convert the eraser point from screen space to drawing coordinates.
 void eraseAt(float ex, float ey) {
   float eraserRadius = 20; // Adjust eraser radius as needed
-  // Convert screen coordinates (mouseX, mouseY) to drawing coordinates (center origin)
+  // Convert screen coordinates to drawing coordinates (centered origin)
   float rx = ex - width / 2;
   float ry = ey - height / 2;
 
+  // === Erase from finished instances ===
   for (int i = instances.size() - 1; i >= 0; i--) {
     JSONObject inst = instances.getJSONObject(i);
     float x = inst.getFloat("x");
     float y = inst.getFloat("y");
-    float w = inst.getFloat("width");  // For a point, w is 1; otherwise, it's the line length.
+    float w = inst.getFloat("width");
     float angleDeg = inst.getFloat("angle");
 
-    if (w == 1) {  // Single point instance
+    if (w == 1) {  // Point instance
       if (dist(rx, ry, x, y) <= eraserRadius) {
         instances.remove(i);
       }
     } else {  // Line instance
       float angleRad = radians(angleDeg);
       float halfLength = w / 2.0;
-      // Calculate the endpoints of the line based on its center (x,y) and angle.
       float x1 = x - halfLength * cos(angleRad);
       float y1 = y - halfLength * sin(angleRad);
       float x2 = x + halfLength * cos(angleRad);
@@ -246,8 +245,17 @@ void eraseAt(float ex, float ey) {
       }
     }
   }
-}
 
+  // === Erase from in-progress raw points ===
+  for (int i = currentStroke.size() - 1; i >= 0; i--) {
+    PVector pt = currentStroke.get(i);
+    float px = pt.x - width / 2;
+    float py = pt.y - height / 2;
+    if (dist(rx, ry, px, py) <= eraserRadius) {
+      currentStroke.remove(i);
+    }
+  }
+}
 
 
 
