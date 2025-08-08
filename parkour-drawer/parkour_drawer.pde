@@ -22,33 +22,43 @@ Button eraserButton;
 // Temporary stroke storage (each drag stroke)
 ArrayList<PVector> currentStroke;
 
+Checkbox rawPointsCheckbox;  // New UI element
+boolean rawPointsMode = false;  // Toggle state
+
 // Constants for segmentation criteria
 final float MAX_DIST = 40;           // Maximum distance between successive points
 float ANGLE_THRESHOLD = 0.6;   // 10° in radians (~0.175 radians)
 final float MIN_POINT_DIST = 2;  // Minimum distance between points
 
+final int CANVAS_WIDTH = 730;  // The drawable canvas area
+
 void setup() {
-  size(730, 500);
+  size(900, 500);  // Total window: 730px canvas + 170px UI panel
 
-  // Initialize the JSON array for finalized strokes
+  // Same as before
   instances = new JSONArray();
-
-  // Initialize the current stroke list
   currentStroke = new ArrayList<PVector>();
 
-  // Initialize the buttons
-  copyButton = new Button("Copy to Clipboard (C)", width - 160, 10, 150, 30);
-  clearButton = new Button("Clear (X)", width - 160, 50, 150, 30);
-  eraserButton = new Button("Eraser: OFF (D)", width - 160, 90, 150, 30);
-  angleSlider = new Slider("Angle Sensitivity", width - 160, 140, 150, 0.1, 1, ANGLE_THRESHOLD);
+  int uiX = 750;  // UI region starts just after the canvas (at 730 + margin)
+  copyButton = new Button("Copy to Clipboard (C)", uiX, 10, 140, 30);
+  clearButton = new Button("Clear (X)", uiX, 50, 140, 30);
+  eraserButton = new Button("Eraser: OFF (D)", uiX, 90, 140, 30);
+  angleSlider = new Slider("Angle Sensitivity", uiX, 140, 140, 0.1, 1, ANGLE_THRESHOLD);
+  rawPointsCheckbox = new Checkbox("Raw Points Mode", uiX, 190);
 
-  // Dark theme setup
   background(30);
-  cursor(CROSS); // Set a crosshair for precision
+  cursor(CROSS);
 }
+
 
 void draw() {
   background(30); // Dark background
+
+  // Draw vertical divider between canvas and UI
+  stroke(60);
+  strokeWeight(1);
+  line(730, 0, 730, height);  // 730 is the edge of drawing area
+
 
   // Use a coordinate system centered in the window for finalized instances.
   pushMatrix();
@@ -57,28 +67,31 @@ void draw() {
 
   // Draw finalized instances.
   // If "length" is 1, we treat it as a point, otherwise as a line marker.
-  for (int i = 0; i < instances.size(); i++) {
-    JSONObject inst = instances.getJSONObject(i);
-    float x = inst.getFloat("x");
-    float y = inst.getFloat("y");
-    float len = inst.getFloat("width");
+  // Draw finalized instances only if raw mode is OFF
+  if (!rawPointsMode) {
+    for (int i = 0; i < instances.size(); i++) {
+      JSONObject inst = instances.getJSONObject(i);
+      float x = inst.getFloat("x");
+      float y = inst.getFloat("y");
+      float len = inst.getFloat("width");
 
-    if (len == 1) {  // Single point instance
-      fill(255, 100, 100);
-      ellipse(x, y, 5, 5);
-    } else {
-      // Retrieve the stored angle in degrees and convert it to radians for rotate()
-      float angle = inst.getFloat("angle");
-      pushMatrix();
-      translate(x, y);
-      rotate(radians(angle));  // Conversion added here
-      stroke(255, 100, 100);
-      strokeWeight(2);
-      line(-len/2, 0, len/2, 0);
-      popMatrix();
-      noStroke();
+      if (len == 1) {  // Single point instance
+        fill(255, 100, 100);
+        ellipse(x, y, 5, 5);
+      } else {
+        float angle = inst.getFloat("angle");
+        pushMatrix();
+        translate(x, y);
+        rotate(radians(angle));
+        stroke(255, 100, 100);
+        strokeWeight(2);
+        line(-len/2, 0, len/2, 0);
+        popMatrix();
+        noStroke();
+      }
     }
   }
+
 
 
 
@@ -110,6 +123,8 @@ void draw() {
   angleSlider.display();
   ANGLE_THRESHOLD = angleSlider.getValue();  // Update global threshold
 
+  rawPointsCheckbox.display();
+  rawPointsMode = rawPointsCheckbox.checked;
   // Reset button text after 2 seconds if copied
   if (copied && millis() - copyTime > 2000) {
     copied = false;
@@ -134,12 +149,12 @@ void mousePressed() {
     eraseAt(mouseX, mouseY);
   } else if (angleSlider.isOverHandle()) {
     angleSlider.dragging = true;
-  } else {
-
+  } else if (isInsideCanvas(mouseX, mouseY)) {
 
     // Start drawing a new stroke.
     isRecording = true;
-    currentStroke.clear();
+    if (!rawPointsMode)
+      currentStroke.clear();
     currentStroke.add(new PVector(mouseX, mouseY));
     lastRecordTime = millis();
   }
@@ -154,19 +169,24 @@ void mouseDragged() {
       lastRecordTime = millis();
     }
   }
-    angleSlider.update();
-
+  angleSlider.update();
 }
 
 void mouseReleased() {
   if (isRecording) {
-    processCurrentStroke();
-    currentStroke.clear();
+    if (!rawPointsMode) {
+      processCurrentStroke();
+      currentStroke.clear();  // Only clear if not in raw mode
+    }
     isRecording = false;
   }
-    angleSlider.dragging = false;
-
+  angleSlider.dragging = false;
 }
+
+boolean isInsideCanvas(float mx, float my) {
+  return mx >= 0 && mx < 730 && my >= 0 && my < height;
+}
+
 
 void keyPressed() {
   if (key == 'C' || key == 'c') {
@@ -176,6 +196,7 @@ void keyPressed() {
     copyTime = millis();
   } else if (key == 'X' || key == 'x') {
     instances = new JSONArray();
+    currentStroke.clear();  // Clear raw points as well
   } else if (key == 'D' || key == 'd') {
     eraserMode = !eraserMode;
     eraserButton.label = eraserMode ? "Eraser: ON (D)" : "Eraser: OFF (D)";
@@ -277,8 +298,6 @@ void processCurrentStroke() {
   // Add the final segment.
   segments.add(new Segment(segStart.copy(), segEnd.copy()));
 
-  // For each segment, compute the center and length then store it.
-  // For each segment, compute the center, length, and angle then store it.
   // For each segment, compute the center, length, and angle then store it.
   for (Segment seg : segments) {
     PVector center;
@@ -347,29 +366,43 @@ void offsetAllInstances(float offsetX, float offsetY) {
   }
 }
 
-
-// Helper function to copy the JSON string of the final instances (segments/points) to the clipboard.
 void copyInstancesToClipboard() {
-  offsetAllInstances(935, 350);  // Temporarily shift all instance coordinates
+  if (rawPointsMode) {
+    JSONArray rawArray = new JSONArray();
+    for (PVector pt : currentStroke) {
+      JSONObject obj = new JSONObject();
+      obj.setFloat("x", pt.x - 365);  // Use fixed original center
+      obj.setFloat("y", pt.y - height/2);
+      rawArray.append(obj);
+    }
+    copyToClipboard(rawArray.toString());
+  } else {
+    offsetAllInstances(935, 350);  // Temporarily shift all instance coordinates
 
-  // Create the final JSON structure
-  JSONObject root = new JSONObject();
+    JSONObject root = new JSONObject();
+    root.setInt("version", 1);
 
-  root.setInt("version", 1);
+    JSONArray lines = new JSONArray();
+    for (int i = 0; i < instances.size(); i++) {
+      JSONObject inst = instances.getJSONObject(i);
 
-  // Add the "lines" array and copy each instance into it
-  JSONArray lines = new JSONArray();
-  for (int i = 0; i < instances.size(); i++) {
-    JSONObject inst = instances.getJSONObject(i);
-    lines.append(inst);
+      JSONObject adjusted = new JSONObject();
+      adjusted.setFloat("x", inst.getFloat("x") + 85);  // Correct the shift
+      adjusted.setFloat("y", inst.getFloat("y"));       // No change
+      adjusted.setFloat("width", inst.getFloat("width"));
+      adjusted.setFloat("angle", inst.getFloat("angle"));
+
+      lines.append(adjusted);
+    }
+    root.setJSONArray("lines", lines);
+
+    copyToClipboard(root.toString());
+
+    offsetAllInstances(-935, -350);  // Revert the coordinate shift
   }
-  root.setJSONArray("lines", lines);
-
-  // Copy to clipboard as formatted string
-  copyToClipboard(root.toString());
-
-  offsetAllInstances(-935, -350);  // Revert the coordinate shift
 }
+
+
 
 
 void copyToClipboard(String text) {
@@ -451,5 +484,50 @@ class Slider {
 
   float getValue() {
     return val;
+  }
+}
+class Checkbox {
+  String label;
+  float x, y;
+  float boxSize = 18;
+  boolean checked = false;
+  boolean wasMousePressed = false;  // To prevent repeated toggles on hold
+
+  Checkbox(String label, float x, float y) {
+    this.label = label;
+    this.x = x;
+    this.y = y;
+  }
+
+  void display() {
+    // Draw box
+    stroke(255);
+    fill(checked ? color(100, 200, 255) : 30);
+    rect(x, y, boxSize, boxSize, 4);
+
+    // Draw check mark
+    if (checked) {
+      stroke(255);
+      strokeWeight(2);
+      line(x + 4, y + boxSize/2, x + boxSize/2, y + boxSize - 4);
+      line(x + boxSize/2, y + boxSize - 4, x + boxSize - 4, y + 4);
+    }
+
+    // Draw label
+    fill(255);
+    textAlign(LEFT, CENTER);
+    textSize(13);
+    text(label, x + boxSize + 10, y + boxSize / 2);
+
+    // Handle click (only once per press)
+    if (mousePressed && over() && !wasMousePressed) {
+      checked = !checked;
+    }
+    wasMousePressed = mousePressed;
+  }
+
+  boolean over() {
+    return mouseX >= x && mouseX <= x + boxSize &&
+      mouseY >= y && mouseY <= y + boxSize;
   }
 }

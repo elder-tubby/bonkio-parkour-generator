@@ -238,6 +238,7 @@ class LineManager implements Runnable {
 
         // Create a new Line with death set to false
         Line newLine = new Line(newPosX, newPosY, w, h, a, false);
+        newLine.isFloor = true;
         lines.add(newLine);
       } else {
         println("Warning: JSONObject at index " + i + " is null.");
@@ -1024,7 +1025,7 @@ class LineManager implements Runnable {
     connectCornerToAnExistingLine(newLine);
     //println("isoutofframe: " + isLineOutOfFrame(newLine));
 
-    JSONArray jsonData = null;
+    //JSONArray jsonData = null;
 
     //try {
     //  // Get the clipboard data
@@ -1047,14 +1048,14 @@ class LineManager implements Runnable {
     //}
 
     boolean isValidLine = true;
-    if (jsonData != null) {// Convert JSON points
-      ArrayList<PVector> convertedPoints = convertPoints(jsonData);
+    //if (jsonData != null) {// Convert JSON points
+    //  ArrayList<PVector> convertedPoints = convertPoints(jsonData);
 
-      float necessaryGapNotSureWhyItsNeeded = 8;
-      float minPossibleGap = getSpawnRadius() * 2 + necessaryGapNotSureWhyItsNeeded;
-      float pathTightness = minPossibleGap + 20;
-      isValidLine = isValidNonDeathLineAroundPath(newLine, convertedPoints, pathTightness);
-    }
+    //  float necessaryGapNotSureWhyItsNeeded = 8;
+    //  float minPossibleGap = getSpawnRadius() * 2 + necessaryGapNotSureWhyItsNeeded;
+    //  float pathTightness = minPossibleGap + 20;
+    //  isValidLine = isValidNonDeathLineAroundPath(newLine, convertedPoints, pathTightness);
+    //}
 
     if (!isTooCloseToOtherLines(newLine) && !isLineOutOfFrame(newLine) && isValidLine) {
       //synchronized (lines) {
