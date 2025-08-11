@@ -329,10 +329,9 @@ class LineManager implements Runnable {
         };
       }
     }
-
     delay(1000);
-    //for (Line l : lines)
-      //if (!l.isOnlyForProgram && !l.isBgLine) lines.remove(l);
+    for (Line l : lines)
+      if (!l.isOnlyForProgram && !l.isBgLine) lines.remove(l);
     ////// Sample lines added temporarily
     //Line sampleLine1 = new Line(startOfWidth + 300, startOfHeight + 300, boxWidth, boxSize, 0, true);
     //sampleLine1.isLeft = true;
@@ -421,8 +420,10 @@ class LineManager implements Runnable {
     //lines.addAll(deathLines);
 
 
+
     lines.removeAll(deathLines);
     // Merge similar death lines after generating them
+    adjustDeathLineThickness(deathLines);
     mergeDeathLines(deathLines);
     lines.addAll(deathLines);
 
@@ -437,17 +438,42 @@ class LineManager implements Runnable {
     isProcessingLines = false;
     println("Death line generation complete.");
   }
+
   /**
-   * Merge runs of near-collinear deathLines into single longer lines.
+   * Increase each line's thickness by `extra`, then push it outward
+   * so its original offset from the path is preserved.
    */
-  // --- MERGE PASS (drop this in right after you build deathLines) ---
+  void adjustDeathLineThickness(ArrayList<Line> deathLines) {
+
+    for (Line l : deathLines) {
+      float extraThickness = random(20, 100);
+      // 1) compute unit-perp of the line's direction
+      float rad = radians(l.angle);
+      PVector dir  = new PVector(cos(rad), sin(rad));      // along the line
+      PVector perp = new PVector(-dir.y, dir.x);           // 90° rotated
+      perp.normalize();                                    // now unit length
+
+      // 2) grow the box height
+      l.height += extraThickness;
+
+      // 3) shift its center by half that extra
+      float shift = extraThickness / 2;
+      if (l.isLeft) {
+        l.centerX += perp.x * shift;
+        l.centerY += perp.y * shift;
+      } else if (l.isRight) {
+        l.centerX -= perp.x * shift;
+        l.centerY -= perp.y * shift;
+      }
+    }
+  }
 
 
   // --- TOP-LEVEL HELPERS (put these at sketch scope, not nested) ---
 
   void mergeDeathLines(ArrayList<Line> deathLines) {
     float angleThresh = 10;  // degrees
-    float gap         = 50;  // extra gap allowance
+    float gap         = 30;  // extra gap allowance
 
     ArrayList<Line> lefts  = new ArrayList<Line>();
     ArrayList<Line> rights = new ArrayList<Line>();
