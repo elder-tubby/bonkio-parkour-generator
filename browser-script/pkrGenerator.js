@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pkrGenerator
 // @namespace    http://tampermonkey.net/
-// @version      0.3
+// @version      0.3.4
 // @description  Converts elder-tubby's parkour generator data to bonk.io maps. Contains a modified version of Clarifi's pkrUtils. Records and outputs player position. Requires 'BonkLIB' mod.
 // @author       eldertubby + Salama + Clarifi
 // @license      MIT
@@ -9,9 +9,10 @@
 // @match        https://bonk.io/gameframe-release.html
 // @run-at       document-end
 // @grant        none
-// @updateURL    https://raw.githubusercontent.com/elder-tubby/parkour-gen-browser-script/refs/heads/main/mini-script.js
-// @downloadURL  https://raw.githubusercontent.com/elder-tubby/parkour-gen-browser-script/refs/heads/main/mini-script.js
+// @updateURL    https://raw.githubusercontent.com/elder-tubby/bonkio-parkour-generator/main/browser-script/pkrGenerator.js
+// @downloadURL  https://raw.githubusercontent.com/elder-tubby/bonkio-parkour-generator/main/browser-script/pkrGenerator.js
 // ==/UserScript==
+
 
 window.posRecorder = {}; // Namespace for encapsulating the UI functions and variables
 
@@ -395,7 +396,7 @@ const addPkrDiv = () => {
         }
     });
 
-    
+
 
     // Function to handle pasting data and starting the game
     const pasteAndStart = async() => {
@@ -420,7 +421,7 @@ const addPkrDiv = () => {
 };
 
 async function fetchRandomMapAndAuthorNames() {
-    const url = `https://raw.githubusercontent.com/elder-tubby/parkour-gen-browser-script/refs/heads/main/map-data/mapAndAuthorNames.json?t=${Math.random() * 1000000}`;
+    const url = `https://raw.githubusercontent.com/elder-tubby/bonkio-parkour-generator/main/browser-script/map-data/mapAndAuthorNames.json?t=${Math.random() * 1000000}`;
 
     try {
         const response = await fetch(url);
@@ -476,112 +477,118 @@ async function createAndSetMap(inputText) {
             map.m.a = randomMapAndAuthor.value; // Assign the random value to map.m.a
         }
 
-        // Set up shapes from the input data
-        map.physics.shapes = inputData.lines.map(r => {
-            let shape = w.bonkHost.bigClass.getNewBoxShape();
-            shape.w = r.width;
-            shape.h = r.height;
-            shape.c = [r.x, r.y];
-            shape.a = r.angle / (180 / Math.PI);
-            shape.color = r.color;
-            shape.d = true; // Assuming 'd' is always true for shapes
-            return shape;
-        });
+const allShapes = inputData.objects || [];
+    
+    // Convert shapes into physics shapes
+    map.physics.shapes = allShapes.map(r => {
+        let shape;
+        if (r.type === "poly") {
+            shape = w.bonkHost.bigClass.getNewPolyShape();
 
-        // Add bodies in batches of 100
-        for (let i = 0; i < Math.ceil(map.physics.shapes.length / 100); i++) {
-            let body = w.bonkHost.bigClass.getNewBody();
-            body.p = [-935, -350];
-            body.fx = Array.apply(
-                null,
-                Array(Math.min(100, map.physics.shapes.length - i * 100))).map((_, j) => {
-                return i * 100 + j;
+            let verts = (r.vertices || []).map(v => {
+                if (Array.isArray(v)) return [Number(v[0]), Number(v[1])];
+                return [Number(v.x ?? v.X ?? 0), Number(v.y ?? v.Y ?? 0)];
             });
-            map.physics.bodies.unshift(body);
+
+            const maxCoord = Math.max(...verts.flat().map(Math.abs), 0);
+            if (maxCoord > 1000) {
+                verts = verts.map(([vx, vy]) => [vx - (r.x || 0), vy - (r.y || 0)]);
+            }
+
+            shape.v = verts;
+            shape.s = Number(r.scale || 1);
+        } else {
+            shape = w.bonkHost.bigClass.getNewBoxShape();
+            shape.w = Number(r.width || 0);
+            shape.h = Number(r.height || 0);
         }
 
-        // Create fixtures based on the input data
-        map.physics.fixtures = inputData.lines.map((r, i) => {
-            let fixture = w.bonkHost.bigClass.getNewFixture();
-            fixture.sh = i;
-            fixture.d = r.isDeath;
-            fixture.re = r.bounciness;
-            fixture.fr = r.friction;
-            fixture.np = r.noPhysics;
-            fixture.ng = r.noGrapple; // Updated to match new JSON structure
-            fixture.f = r.color;
+            shape.c = [Number(r.x || 0), Number(r.y || 0)];
+            shape.a = (Number(r.angle || 0)) * Math.PI / 180;
+        shape.color = Number(r.color || 0);
+        shape.d = true;
+        return shape;
+    });
 
-            // Set the name based on line attributes
-            map.physics.bro = map.physics.bodies.map((_, i) => i);
-            if (r.isCapzone) {
-                fixture.n = r.id + '. CZ';
-            } else if (r.isNoJump) {
-                fixture.n = r.id + '. NoJump';
-            } else if (r.noPhysics) {
-                fixture.n = r.id + '. NoPhysics';
-            } else {
-                fixture.n = r.id + '. Shape';
-            }
+    // Add bodies in batches of 100
+    for (let i = 0; i < Math.ceil(map.physics.shapes.length / 100); i++) {
+        let body = w.bonkHost.bigClass.getNewBody();
+        body.p = [-935, -350];
+        body.fx = Array.from(
+            { length: Math.min(100, map.physics.shapes.length - i * 100) },
+            (_, j) => i * 100 + j
+        );
+        map.physics.bodies.unshift(body);
+    }
 
-            return fixture;
-        });
+    // Create fixtures from shapes
+    map.physics.fixtures = allShapes.map((r, i) => {
+        let fixture = w.bonkHost.bigClass.getNewFixture();
+        fixture.sh = i;
+        fixture.d = r.isDeath;
+fixture.re = r.isBouncy ? null : -1;
+        fixture.fr = r.friction;
+        fixture.np = r.noPhysics;
+        fixture.ng = r.noGrapple;
+        fixture.f = r.color;
 
-        map.physics.bro = map.physics.bodies.map((_, i) => i);
-
-        // Add cap zones based on conditions
-        inputData.lines.forEach(line => {
-            if (line.isCapzone) {
-                // Create a new cap zone object
-                const newCapZone = {
-                    n: line.id + '. Cap Zone',
-                    ty: 1,
-                    l: 0.01,
-                    i: line.id,
-                };
-
-                // Access the existing capZones array and add the new cap zone
-                map.capZones.push(newCapZone);
-            }
-
-            if (line.isNoJump) {
-                // Create a new cap zone object for NoJump
-                const newCapZoneNoJump = {
-                    n: line.id + '. No=Jump',
-                    ty: 2,
-                    l: 10,
-                    i: line.id,
-                };
-
-                // Access the existing capZones array and add the new cap zone
-                map.capZones.push(newCapZoneNoJump);
-            }
-        });
-
-        if (spawnY <= 10000 && spawnX <= 10000) {
-            // Set up the spawn based on parsed data
-            map.spawns = [{
-                b: true,
-                f: true,
-                gr: false,
-                n: 'Spawn',
-                priority: 5,
-                r: true,
-                x: spawnX,
-                xv: 0,
-                y: spawnY,
-                ye: false,
-                yv: 0,
-            },
-                         ];
+        if (r.isCapzone) {
+            fixture.n = r.id + '. CZ';
+        } else if (r.isNoJump) {
+            fixture.n = r.id + '. NoJump';
+        } else if (r.noPhysics) {
+            fixture.n = r.id + '. NoPhysics';
+        } else {
+            fixture.n = r.id + '. Shape';
         }
 
-        map.s.nc = true;
-        map.s.re = true;
-        map.physics.ppm = mapSize;
+        return fixture;
+    });
 
-        gs.map = map;
-        w.bonkHost.menuFunctions.setGameSettings(gs);
-        w.bonkHost.menuFunctions.updateGameSettings();
+    map.physics.bro = map.physics.bodies.map((_, i) => i);
+
+    // Capzones
+    allShapes.forEach(line => {
+        if (line.isCapzone) {
+            map.capZones.push({
+                n: line.id + '. Cap Zone',
+                ty: 1,
+                l: 0.01,
+                i: line.id,
+            });
+        }
+
+        if (line.isNoJump) {
+            map.capZones.push({
+                n: line.id + '. NoJump',
+                ty: 2,
+                l: 10,
+                i: line.id,
+            });
+        }
+    });
+
+    map.spawns = [{
+        b: true,
+        f: true,
+        gr: false,
+        n: 'Spawn',
+        priority: 5,
+        r: true,
+        x: spawnX,
+        xv: 0,
+        y: spawnY,
+        ye: false,
+        yv: 0,
+    }];
+
+    map.s.nc = true;
+    map.s.re = true;
+    map.physics.ppm = mapSize;
+
+    gs.map = map;
+    w.bonkHost.menuFunctions.setGameSettings(gs);
+    w.bonkHost.menuFunctions.updateGameSettings();
 
         Utils.showNotification('Map created successfully!');
     } catch (e) {
