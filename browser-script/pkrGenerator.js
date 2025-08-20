@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pkrGenerator
 // @namespace    http://tampermonkey.net/
-// @version      0.3.4
+// @version      0.3.5
 // @description  Converts elder-tubby's parkour generator data to bonk.io maps. Contains a modified version of Clarifi's pkrUtils. Records and outputs player position. Requires 'BonkLIB' mod.
 // @author       eldertubby + Salama + Clarifi
 // @license      MIT
@@ -632,11 +632,15 @@ function getProcessedMapSize(inputData) {
 function convertGameDataToJSON() {
     // Get the game settings’ map from the bonkHost.
     const w = parent.frames[0];
+    if (!w || !w.bonkHost || !w.bonkHost.toolFunctions) {
+        console.error("Game environment not found.");
+        return;
+    }
     const gameMap = w.bonkHost.toolFunctions.getGameSettings().map;
     const shapes = gameMap.physics.shapes;
     const fixtures = gameMap.physics.fixtures;
     const capZones = gameMap.capZones || [];
-    const lines = [];
+    const exportedObjects = [];
 
     const xOffsetForPkrGenrator = 935;
     const yOffsetForPkrGenrator = 350;
@@ -644,166 +648,108 @@ function convertGameDataToJSON() {
     // Create a map of capZones for quick lookup
     const capZoneMap = new Map();
     capZones.forEach(zone => {
-        if (zone.ty === 1) {
-            capZoneMap.set(zone.i, 'capzone');
-        } else if (zone.ty === 2) {
-            capZoneMap.set(zone.i, 'nojump');
-        }
+        // ty: 1 is capzone, ty: 2 is nojump
+        const zoneType = zone.ty === 1 ? 'capzone' : (zone.ty === 2 ? 'nojump' : 'unknown');
+        capZoneMap.set(zone.i, zoneType);
     });
 
-    // Create a map to find the body a fixture belongs to
+    // Create a map to find the body's position for each fixture
     const bodyMap = new Map();
     gameMap.physics.bodies.forEach(body => {
-        body.fx.forEach(fixtureIndex => {
-            bodyMap.set(fixtureIndex, body.p); // Store the body's position for each fixture
-        });
+        if (body.fx) {
+            body.fx.forEach(fixtureIndex => {
+                bodyMap.set(fixtureIndex, body.p); // Store body's position [x, y]
+            });
+        }
     });
 
-    // Create a map to find the body a fixture belongs to and store its bounciness
-    const bodyBouncinessMap = new Map();
-    gameMap.physics.bodies.forEach(body => {
-        body.fx.forEach(fixtureIndex => {
-            bodyBouncinessMap.set(fixtureIndex, body.s.re);
-        });
-    });
-
-    // Loop through each fixture (assumed to match the shapes index-by-index)
+    // Loop through each fixture to process its corresponding shape
     for (let i = 0; i < fixtures.length; i++) {
-
-        // Get the body's position or default to [0, 0] if not found
-        const bodyPos = bodyMap.get(i) || [0, 0];
-
         const fixture = fixtures[i];
-        const shape = shapes[i];
+        const shape = shapes[fixture.sh]; // Use fixture.sh to get the correct shape index
+        if (!shape) continue;
 
-        // Only consider rectangle shapes
-        if (shape.type !== 'bx')
-            continue;
+        const bodyPos = bodyMap.get(i) || [0, 0];
+        const id = i; // Use the fixture index as the unique ID
 
-        const id = i; // Assign unique ID iteratively
-
-
-        // Adjust x and y based on body's position
-        const x = shape.c[0] + bodyPos[0] + xOffsetForPkrGenrator;
-        const y = shape.c[1] + bodyPos[1] + yOffsetForPkrGenrator;
-
-        // Use the fixture name to determine special types.
+        // Common properties derived from the fixture
         const isCapzone = capZoneMap.get(i) === 'capzone';
-
-        // Convert the angle from radians back to degrees.
-        const angle = shape.a * (180 / Math.PI);
-
-        // Decide friction; if none, default to 0.
-        const friction = fixture.fr ?? 0;
-
-        // Determine if the platform is “bouncy”. When bounciness was null, it meant the platform is bouncy.
-
-        // Get the body's bounciness or default to 0 if not found
-        const bodyBounciness = bodyBouncinessMap.get(i) ?? 0;
-
-        // Determine isBouncy based on body and fixture bounciness
-        if (bodyBounciness > -0.95) {
-            if (fixture.re === null || fixture.re === undefined) {
-                isBouncy = true;
-            } else {
-                isBouncy = fixture.re > -0.95;
-            }
-        } else {
-            if (fixture.re === null || fixture.re === undefined) {
-                isBouncy = false;
-            } else {
-                isBouncy = fixture.re > -0.95;
-            }
-        }
-
-        if (isCapzone) {
-            isBouncy = false;
-        }
-
-        const isDeath = !!fixture.d;
-
-        if (isDeath) {
-            isBouncy = false;
-        }
-
-        const bounciness = isBouncy ? null : -1;
-
-        // We infer isBgLine from the noPhysics flag.
-        const noPhysics = fixture.np;
-        const isBgLine = !!noPhysics;
-
         const isNoJump = capZoneMap.get(i) === 'nojump';
-        // Other attributes that always default to false:
-        const isOnlyForProgram = false;
-        const isFloor = true;
-        // Optionally, isFrame can be set; we set it to false as we lost that info.
-        const isFrame = false;
+        const isDeath = !!fixture.d;
+        const isBouncy = fixture.re === null; // In the game engine, `null` signifies bounciness
+        const noPhysics = !!fixture.np;
+        const noGrapple = !!fixture.ng;
 
-        // Create the JSON object for this line.
-        const line = {
+        // Base object with properties shared by all shapes
+        const baseObject = {
             id: id,
-            color: fixture.f, // same as fixture.f, but using shape is fine.
-            bounciness: bounciness,
+            color: fixture.f || 16777215,
+            x: shape.c[0] + bodyPos[0] + xOffsetForPkrGenrator,
+            y: shape.c[1] + bodyPos[1] + yOffsetForPkrGenrator,
+            angle: shape.a * (180 / Math.PI), // Convert radians to degrees
             isBouncy: isBouncy,
-            isOnlyForProgram: isOnlyForProgram,
-            friction: friction,
-            isDeath: isDeath, // fixture.d was set from r.isDeath.
-            isBgLine: isBgLine,
-            noPhysics: noPhysics,
-            // noGrapple: fixture.ng, // from r.noGrapple.
-            noGrapple: true,
+            isDeath: isDeath,
             isCapzone: isCapzone,
-            x: x,
-            y: y,
-            width: shape.w,
-            height: shape.h,
-            angle: angle,
             isNoJump: isNoJump,
-            isFrame: isFrame,
-            isFloor: isFloor
+            noPhysics: noPhysics,
+            noGrapple: noGrapple,
+            isBgLine: noPhysics, // isBgLine is often inferred from noPhysics
         };
 
-        lines.push(line);
+        let finalObject = null;
+
+        // Handle polygons
+        if (shape.type === 'po') {
+            finalObject = {
+                ...baseObject,
+                type: "poly",
+                scale: shape.s || 1,
+                vertices: (shape.v || []).map(v => ({ x: v[0], y: v[1] })),
+            };
+        }
+        // Handle boxes (rectangles)
+        else if (shape.type === 'bx') {
+             finalObject = {
+                ...baseObject,
+                type: "line",
+                width: shape.w,
+                height: shape.h,
+                bounciness: isBouncy ? null : -1,
+            };
+        }
+
+        if (finalObject) {
+            exportedObjects.push(finalObject);
+        }
     }
 
-    // For spawn and mapSize we may take existing values if present or use dummy ones.
+    // Handle spawn point
     const spawn = (gameMap.spawns && gameMap.spawns.length > 0)
-    ? {
-        spawnX: gameMap.spawns[0].x,
-        spawnY: gameMap.spawns[0].y
-    }
-    : {
-        spawnX: 0,
-        spawnY: 0
-    };
+        ? { spawnX: gameMap.spawns[0].x, spawnY: gameMap.spawns[0].y }
+        : { spawnX: 0, spawnY: 0 };
 
-    const mapSize = transformMapSizeFromGameData(gameMap.physics.ppm) || 6; // Use the transformed map size
+    // Handle map size
+    const mapSize = gameMap.physics.ppm || 9;
 
-
-    // Build the final JSON output.
+    // Build the final JSON output, ensuring the key is "objects"
     const outputJSON = {
+        version: 1,
         spawn: spawn,
         mapSize: mapSize,
-        lines: lines,
-        version: 1
+        objects: exportedObjects,
     };
+
     const jsonString = JSON.stringify(outputJSON, null, 2);
 
-    // Create a temporary text area element to facilitate clipboard copying
-    const textArea = document.createElement('textarea');
-    textArea.value = jsonString;
-    document.body.appendChild(textArea);
-
-    // Select the text and copy it
-    textArea.select();
-    textArea.setSelectionRange(0, textArea.value.length); // For mobile devices
-    document.execCommand('copy');
-
-    // Clean up by removing the textarea from the DOM
-    document.body.removeChild(textArea);
-
-    // Log success
-    console.log('JSON copied to clipboard successfully!');
+    // Copy to clipboard
+    navigator.clipboard.writeText(jsonString).then(() => {
+        console.log('JSON copied to clipboard successfully!');
+        // Optionally show a notification to the user
+        // w.bonkHost.toolFunctions.showNotification('Map data copied!');
+    }).catch(err => {
+        console.error('Failed to copy JSON to clipboard:', err);
+        // w.bonkHost.toolFunctions.showNotification('Failed to copy map data.');
+    });
 
     return outputJSON;
 }
