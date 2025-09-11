@@ -38,7 +38,7 @@ void handleControlKeyActions() {
 
 
   if (!isProcessingLines) {
-    if (keyCode == 'P' || keyCode == 'p') {
+    if (keyCode == 'V' || keyCode == 'v') {
       handlePasteLineDataBtnClick();
     }
   }

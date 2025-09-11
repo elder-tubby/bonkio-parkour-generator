@@ -402,7 +402,7 @@ void copyInstancesToClipboard() {
 
       lines.append(adjusted);
     }
-    root.setJSONArray("lines", lines);
+    root.setJSONArray("objects", lines);
 
     copyToClipboard(root.toString());
 

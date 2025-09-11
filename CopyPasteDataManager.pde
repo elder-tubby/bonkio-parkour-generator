@@ -1,4 +1,3 @@
-
 void saveLineAttributes() {
 
   float spawnX;
@@ -16,28 +15,28 @@ void saveLineAttributes() {
     spawnY = 99999;
   }
 
-  //int mapSize = getMapSize();
   int mapSize = (int) Math.floor(settings.mapSize[0]);
+
   // Create the main JSON object
   JSONObject jsonObject = new JSONObject();
   jsonObject.put("version", 1);
 
-  // Create the "spawn" JSON object and add it to the main object
+  // Create the "spawn" JSON object
   JSONObject spawnObject = new JSONObject();
   spawnObject.put("spawnX", spawnX);
   spawnObject.put("spawnY", spawnY);
   jsonObject.put("spawn", spawnObject);
 
-  // Add map size to the main object
+  // Add map size
   jsonObject.put("mapSize", mapSize);
 
-  // Create the "lines" JSON array
-  JSONArray linesArray = new JSONArray();
+  // Create the "objects" JSON array (renamed from "lines")
+  JSONArray objectsArray = new JSONArray();
 
   int id = 0;
-  HashMap<Line, Integer> lineIdMap = new HashMap<>(); // Track IDs for mapping
+  HashMap<Line, Integer> lineIdMap = new HashMap<>();
 
-  // First pass: Assign IDs to all lines
+  // First pass: Assign IDs
   for (Line line : lines) {
     if (line.isOnlyForProgram) continue;
     lineIdMap.put(line, id++);
@@ -48,68 +47,109 @@ void saveLineAttributes() {
 
     int colorString = rgbToDecimal(line.lineColor);
     boolean isDeath = line.isDeath;
-    boolean noGrapple = !line.hasGrapple; // Inverted logic
+    boolean noGrapple = !line.hasGrapple;
     boolean noPhysics = line.noPhysics;
 
-    // Create the line JSON object
-    JSONObject lineObject = new JSONObject();
-    lineObject.put("id", lineIdMap.get(line));
-    lineObject.put("x", line.centerX);
-    lineObject.put("y", line.centerY);
-    lineObject.put("width", line.width);
-    lineObject.put("height", line.height);
-    lineObject.put("angle", line.angle);
-    lineObject.put("isDeath", isDeath);
-    lineObject.put("isBouncy", line.isBouncy); // Add to JSON
-    lineObject.put("color", colorString);
-    lineObject.put("noPhysics", noPhysics);
-    lineObject.put("isSelectableNoPhysics", line.isSelectableNoPhysics);
-    lineObject.put("noGrapple", noGrapple);
-    lineObject.put("isCapzone", line.isCapzone);
-    lineObject.put("isNoJump", line.isNoJump);
-    lineObject.put("isFrame", line.isFrame); // Add to JSON
-    lineObject.put("isFloor", line.isFloor); // Add to JSON
-    lineObject.put("isBgLine", line.isBgLine); // Add to JS
-    lineObject.put("isOnlyForProgram", line.isOnlyForProgram); // Add to JS
+    // Create the object JSON
+    JSONObject obj = new JSONObject();
+    obj.put("id", lineIdMap.get(line));
+    obj.put("x", line.centerX);
+    obj.put("y", line.centerY);
+    obj.put("width", line.width);
+    obj.put("height", line.height);
+    obj.put("angle", line.angle);
+    obj.put("isDeath", isDeath);
+    obj.put("isBouncy", line.isBouncy);
+    obj.put("color", colorString);
+    obj.put("noPhysics", noPhysics);
+    obj.put("isSelectableNoPhysics", line.isSelectableNoPhysics);
+    obj.put("noGrapple", noGrapple);
+    obj.put("isCapzone", line.isCapzone);
+    obj.put("isNoJump", line.isNoJump);
+    obj.put("isFrame", line.isFrame);
+    obj.put("isFloor", line.isFloor);
+    obj.put("isBgLine", line.isBgLine);
+    obj.put("isOnlyForProgram", line.isOnlyForProgram);
+
+    // NEW: add type
+    obj.put("type", "line");
 
     if (!line.isBouncy) {
       line.bounciness = "-1";
     }
 
     if (line.bounciness != null && !line.bounciness.equals("null")) {
-      // If bounciness is a valid number, put it as a number (without quotes)
-      lineObject.put("bounciness", Float.parseFloat(line.bounciness));
+      obj.put("bounciness", Float.parseFloat(line.bounciness));
     } else {
-      // If bounciness is null or the string "null", put it as a real null value
-      lineObject.put("bounciness", JSONObject.NULL);
+      obj.put("bounciness", JSONObject.NULL);
     }
-    lineObject.put("friction", line.friction);
 
-    // Check if this line has a noPhysicsDuplicate and store its ID
+    obj.put("friction", line.friction);
+
     if (!noPhysics && noPhysicsDuplicateLineMap != null && noPhysicsDuplicateLineMap.containsKey(line)) {
       Line duplicate = noPhysicsDuplicateLineMap.get(line);
       if (lineIdMap.containsKey(duplicate)) {
-        lineObject.put("noPhysicsDuplicateId", lineIdMap.get(duplicate));
+        obj.put("noPhysicsDuplicateId", lineIdMap.get(duplicate));
       }
     }
 
-    // Add the line object to the lines array
-    linesArray.append(lineObject);
-
-
+    objectsArray.append(obj);
     id++;
   }
 
-  // Add the lines array to the main object
-  jsonObject.put("lines", linesArray);
+  // Attach objects array instead of lines array
+  jsonObject.put("objects", objectsArray);
+
+ // --- NEW COLORS SECTION ---
+  JSONObject colorsObject = new JSONObject();
+
+  // background: first bg line
+  for (Line line : lines) {
+    if (line.isBgLine) {
+      colorsObject.put("background", "rgb(" + red(line.lineColor) + ", " + green(line.lineColor) + ", " + blue(line.lineColor) + ")");
+      break;
+    }
+  }
+
+  // none: first physics, not death, not bouncy
+  for (Line line : lines) {
+    if (!line.noPhysics && !line.isDeath && !line.isBouncy) {
+      colorsObject.put("none", "rgb(" + red(line.lineColor) + ", " + green(line.lineColor) + ", " + blue(line.lineColor) + ")");
+      break;
+    }
+  }
+
+  // bouncy
+  for (Line line : lines) {
+    if (line.isBouncy) {
+      colorsObject.put("bouncy", "rgb(" + red(line.lineColor) + ", " + green(line.lineColor) + ", " + blue(line.lineColor) + ")");
+      break;
+    }
+  }
+
+  // death
+  for (Line line : lines) {
+    if (line.isDeath) {
+      colorsObject.put("death", "rgb(" + red(line.lineColor) + ", " + green(line.lineColor) + ", " + blue(line.lineColor) + ")");
+      break;
+    }
+  }
+
+  // Attach colors object to the root json
+  jsonObject.put("colors", colorsObject);
+
+
 
   // Convert to JSON string
-  String jsonOutput = jsonObject.toString(); // Pretty print with an indent of 2 spaces
+  String jsonOutput = jsonObject.toString();
 
-  // Copy to clipboard and show the label
+ 
+  // Copy to clipboard and show label
   copyToClipboard(jsonOutput);
   cp5.getController("lineDataCopiedLabel").show();
 }
+
+
 
 void handlePasteLineDataBtnClick() {
   // Step 1: Get clipboard data as a JSON string
@@ -181,10 +221,10 @@ void handlePasteLineDataBtnClick() {
   // Step 4: Get the "lines" array from JSON
   //JSONArray linesArray = jsonData.getJSONArray("lines");
 
-  JSONArray linesArray = jsonData.hasKey("lines") ? jsonData.getJSONArray("lines") : null;
+  JSONArray linesArray = jsonData.hasKey("objects") ? jsonData.getJSONArray("objects") : null;
 
   if (linesArray == null) {
-    println("The 'lines' key is missing.");
+    println("The 'objects' key is missing.");
     return;
   }
 
@@ -196,6 +236,11 @@ void handlePasteLineDataBtnClick() {
   for (int i = 0; i < linesArray.size(); i++) {
 
     JSONObject lineData = linesArray.getJSONObject(i);
+
+    if (lineData.hasKey("type") && lineData.getString("type").equals("poly")) {
+      continue;
+
+  }
 
     // Extract the basic attributes for the Line object
     float x = lineData.hasKey("x") && lineData.get("x") != null ? lineData.getFloat("x") : (endOfWidth - startOfWidth);

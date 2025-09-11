@@ -143,7 +143,7 @@ class EditLinesManager {
       .setPosition(endOfWidth - 10 - 150, startOfHeight - 50)
       .setSize(140, 30)
       .setFont(tabFont)
-      .setLabel("Paste map (CTRL + P)")
+      .setLabel("Paste map (CTRL + V)")
       .onClick(new CallbackListener() {
       public void controlEvent(CallbackEvent e) {
         handlePasteLineDataBtnClick();
