@@ -433,7 +433,7 @@ int getTransformedMapSize(int mapSize) {
   // Define the map size transformation mapping
   HashMap<Integer, Integer> mapSizeMapping = new HashMap<>();
   mapSizeMapping.put(30, 1);
-  mapSizeMapping.put(24, 2);
+  mapSizeMapping.put(25, 2);
   mapSizeMapping.put(20, 3);
   mapSizeMapping.put(17, 4);
   mapSizeMapping.put(15, 5);

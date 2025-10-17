@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pkrGenerator
 // @namespace    http://tampermonkey.net/
-// @version      0.3.5
+// @version      0.3.6
 // @description  Converts elder-tubby's parkour generator data to bonk.io maps. Contains a modified version of Clarifi's pkrUtils. Records and outputs player position. Requires 'BonkLIB' mod.
 // @author       eldertubby + Salama + Clarifi
 // @license      MIT
@@ -477,118 +477,122 @@ async function createAndSetMap(inputText) {
             map.m.a = randomMapAndAuthor.value; // Assign the random value to map.m.a
         }
 
-const allShapes = inputData.objects || [];
-    
-    // Convert shapes into physics shapes
-    map.physics.shapes = allShapes.map(r => {
-        let shape;
-        if (r.type === "poly") {
-            shape = w.bonkHost.bigClass.getNewPolyShape();
+        const allShapes = inputData.objects || [];
 
-            let verts = (r.vertices || []).map(v => {
-                if (Array.isArray(v)) return [Number(v[0]), Number(v[1])];
-                return [Number(v.x ?? v.X ?? 0), Number(v.y ?? v.Y ?? 0)];
-            });
+        // Convert shapes into physics shapes
+        map.physics.shapes = allShapes.map(r => {
+            let shape;
+            if (r.type === "poly") {
+                shape = w.bonkHost.bigClass.getNewPolyShape();
 
-            const maxCoord = Math.max(...verts.flat().map(Math.abs), 0);
-            if (maxCoord > 1000) {
-                verts = verts.map(([vx, vy]) => [vx - (r.x || 0), vy - (r.y || 0)]);
+                let verts = (r.vertices || []).map(v => {
+                    if (Array.isArray(v)) return [Number(v[0]), Number(v[1])];
+                    return [Number(v.x ?? v.X ?? 0), Number(v.y ?? v.Y ?? 0)];
+                });
+
+                const maxCoord = Math.max(...verts.flat().map(Math.abs), 0);
+                if (maxCoord > 1000) {
+                    verts = verts.map(([vx, vy]) => [vx - (r.x || 0), vy - (r.y || 0)]);
+                }
+
+                shape.v = verts;
+                shape.s = Number(r.scale || 1);
+            } else if (r.type === "circle") {
+                // --- NEW: Handle circle type ---
+                shape = w.bonkHost.bigClass.getNewCircleShape();
+                shape.r = Number(r.radius || 0);
+            } else {
+                shape = w.bonkHost.bigClass.getNewBoxShape();
+                shape.w = Number(r.width || 0);
+                shape.h = Number(r.height || 0);
             }
-
-            shape.v = verts;
-            shape.s = Number(r.scale || 1);
-        } else {
-            shape = w.bonkHost.bigClass.getNewBoxShape();
-            shape.w = Number(r.width || 0);
-            shape.h = Number(r.height || 0);
-        }
 
             shape.c = [Number(r.x || 0), Number(r.y || 0)];
             shape.a = (Number(r.angle || 0)) * Math.PI / 180;
-        shape.color = Number(r.color || 0);
-        shape.d = true;
-        return shape;
-    });
+            shape.color = Number(r.color || 0);
+            shape.d = true;
+            return shape;
+        });
 
-    // Add bodies in batches of 100
-    for (let i = 0; i < Math.ceil(map.physics.shapes.length / 100); i++) {
-        let body = w.bonkHost.bigClass.getNewBody();
-        body.p = [-935, -350];
-        body.fx = Array.from(
-            { length: Math.min(100, map.physics.shapes.length - i * 100) },
-            (_, j) => i * 100 + j
-        );
-        map.physics.bodies.unshift(body);
-    }
-
-    // Create fixtures from shapes
-    map.physics.fixtures = allShapes.map((r, i) => {
-        let fixture = w.bonkHost.bigClass.getNewFixture();
-        fixture.sh = i;
-        fixture.d = r.isDeath;
-fixture.re = r.isBouncy ? null : -1;
-        fixture.fr = r.friction;
-        fixture.np = r.noPhysics;
-        fixture.ng = r.noGrapple;
-        fixture.f = r.color;
-
-        if (r.isCapzone) {
-            fixture.n = r.id + '. CZ';
-        } else if (r.isNoJump) {
-            fixture.n = r.id + '. NoJump';
-        } else if (r.noPhysics) {
-            fixture.n = r.id + '. NoPhysics';
-        } else {
-            fixture.n = r.id + '. Shape';
+        // Add bodies in batches of 100
+        for (let i = 0; i < Math.ceil(map.physics.shapes.length / 100); i++) {
+            let body = w.bonkHost.bigClass.getNewBody();
+            body.p = [-935, -350];
+            body.fx = Array.from(
+                { length: Math.min(100, map.physics.shapes.length - i * 100) },
+                (_, j) => i * 100 + j
+            );
+            map.physics.bodies.unshift(body);
         }
 
-        return fixture;
-    });
+        // Create fixtures from shapes
+        map.physics.fixtures = allShapes.map((r, i) => {
+            let fixture = w.bonkHost.bigClass.getNewFixture();
+            fixture.sh = i;
+            fixture.d = r.isDeath;
+            fixture.re = r.isBouncy ? null : -1;
+            fixture.fr = r.friction;
+            fixture.np = r.noPhysics;
+            fixture.ng = r.noGrapple;
+            fixture.f = r.color;
 
-    map.physics.bro = map.physics.bodies.map((_, i) => i);
+            if (r.isCapzone) {
+                fixture.n = r.id + '. CZ';
+            } else if (r.isNoJump) {
+                fixture.n = r.id + '. NoJump';
+            } else if (r.noPhysics) {
+                fixture.n = r.id + '. NoPhysics';
+            } else {
+                fixture.n = r.id + '. Shape';
+            }
 
-    // Capzones
-    allShapes.forEach(line => {
-        if (line.isCapzone) {
-            map.capZones.push({
-                n: line.id + '. Cap Zone',
-                ty: 1,
-                l: 0.01,
-                i: line.id,
-            });
-        }
+            return fixture;
+        });
 
-        if (line.isNoJump) {
-            map.capZones.push({
-                n: line.id + '. NoJump',
-                ty: 2,
-                l: 10,
-                i: line.id,
-            });
-        }
-    });
+        map.physics.bro = map.physics.bodies.map((_, i) => i);
 
-    map.spawns = [{
-        b: true,
-        f: true,
-        gr: false,
-        n: 'Spawn',
-        priority: 5,
-        r: true,
-        x: spawnX,
-        xv: 0,
-        y: spawnY,
-        ye: false,
-        yv: 0,
-    }];
+        // Capzones
+        allShapes.forEach(line => {
+            if (line.isCapzone) {
+                map.capZones.push({
+                    n: line.id + '. Cap Zone',
+                    ty: 1,
+                    l: 0.01,
+                    i: line.id,
+                });
+            }
 
-    map.s.nc = true;
-    map.s.re = true;
-    map.physics.ppm = mapSize;
+            if (line.isNoJump) {
+                map.capZones.push({
+                    n: line.id + '. NoJump',
+                    ty: 2,
+                    l: 10,
+                    i: line.id,
+                });
+            }
+        });
 
-    gs.map = map;
-    w.bonkHost.menuFunctions.setGameSettings(gs);
-    w.bonkHost.menuFunctions.updateGameSettings();
+        map.spawns = [{
+            b: true,
+            f: true,
+            gr: false,
+            n: 'Spawn',
+            priority: 5,
+            r: true,
+            x: spawnX,
+            xv: 0,
+            y: spawnY,
+            ye: false,
+            yv: 0,
+        }];
+
+        map.s.nc = true;
+        map.s.re = true;
+        map.physics.ppm = mapSize;
+
+        gs.map = map;
+        w.bonkHost.menuFunctions.setGameSettings(gs);
+        w.bonkHost.menuFunctions.updateGameSettings();
 
         Utils.showNotification('Map created successfully!');
     } catch (e) {
@@ -709,12 +713,20 @@ function convertGameDataToJSON() {
         }
         // Handle boxes (rectangles)
         else if (shape.type === 'bx') {
-             finalObject = {
+            finalObject = {
                 ...baseObject,
                 type: "line",
                 width: shape.w,
                 height: shape.h,
                 bounciness: isBouncy ? null : -1,
+            };
+        }
+
+        else if (shape.type === 'ci') {
+            finalObject = {
+                ...baseObject,
+                type: "circle",
+                radius: shape.r,
             };
         }
 
@@ -725,11 +737,11 @@ function convertGameDataToJSON() {
 
     // Handle spawn point
     const spawn = (gameMap.spawns && gameMap.spawns.length > 0)
-        ? { spawnX: gameMap.spawns[0].x, spawnY: gameMap.spawns[0].y }
-        : { spawnX: 0, spawnY: 0 };
+    ? { spawnX: gameMap.spawns[0].x, spawnY: gameMap.spawns[0].y }
+    : { spawnX: 0, spawnY: 0 };
 
     // Handle map size
-    const mapSize = gameMap.physics.ppm || 9;
+    const mapSize = transformMapSizeFromGameData(gameMap.physics.ppm) || 9; // Use the transformed map size
 
     // Build the final JSON output, ensuring the key is "objects"
     const outputJSON = {
@@ -757,7 +769,7 @@ function convertGameDataToJSON() {
 function transformMapSizeFromGameData(mapSize) {
     const mapSizeMapping = {
         1: 30,
-        2: 24,
+        2: 25,
         3: 20,
         4: 17,
         5: 15,
