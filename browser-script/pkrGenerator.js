@@ -444,7 +444,6 @@ async function fetchRandomMapAndAuthorNames() {
 async function createAndSetMap(inputText) {
     try {
         const randomMapAndAuthor = await fetchRandomMapAndAuthorNames();
-
         const w = parent.frames[0];
         let gs = w.bonkHost.toolFunctions.getGameSettings();
         let map = w.bonkHost.bigClass.mergeIntoNewMap(
@@ -477,44 +476,56 @@ async function createAndSetMap(inputText) {
             map.m.a = randomMapAndAuthor.value; // Assign the random value to map.m.a
         }
 
-        const allShapes = inputData.objects || [];
+        // --- NEW: Handle old format ---
+        const allShapes = inputData.objects || inputData.lines || [];
+        const isOldFormat = !inputData.objects && inputData.lines;
+        // --- End new logic ---
 
         // Convert shapes into physics shapes
         map.physics.shapes = allShapes.map(r => {
             let shape;
-            if (r.type === "poly") {
+
+            // --- NEW: Force type to 'line' if old format ---
+            const objType = isOldFormat ? "line" : r.type;
+
+            if (objType === "poly") {
                 shape = w.bonkHost.bigClass.getNewPolyShape();
 
                 let verts = (r.vertices || []).map(v => {
+
                     if (Array.isArray(v)) return [Number(v[0]), Number(v[1])];
                     return [Number(v.x ?? v.X ?? 0), Number(v.y ?? v.Y ?? 0)];
                 });
 
                 const maxCoord = Math.max(...verts.flat().map(Math.abs), 0);
                 if (maxCoord > 1000) {
+
                     verts = verts.map(([vx, vy]) => [vx - (r.x || 0), vy - (r.y || 0)]);
                 }
 
                 shape.v = verts;
                 shape.s = Number(r.scale || 1);
-            } else if (r.type === "circle") {
-                // --- NEW: Handle circle type ---
-                shape = w.bonkHost.bigClass.getNewCircleShape();
-                shape.r = Number(r.radius || 0);
-            } else {
-                shape = w.bonkHost.bigClass.getNewBoxShape();
-                shape.w = Number(r.width || 0);
-                shape.h = Number(r.height || 0);
-            }
+            } else
+                if (objType === "circle") {
+                    // --- NEW: Handle circle type ---
+                    shape = w.bonkHost.bigClass.getNewCircleShape();
+                    shape.r = Number(r.radius || 0);
+                } else {
+                    // This now correctly handles both 'line' type and all old format items
+                    shape = w.bonkHost.bigClass.getNewBoxShape();
+                    shape.w = Number(r.width || 0);
+                    shape.h = Number(r.height || 0);
+                }
 
             shape.c = [Number(r.x || 0), Number(r.y || 0)];
             shape.a = (Number(r.angle || 0)) * Math.PI / 180;
+            // Old format doesn't have color, so Number(r.color || 0) will correctly default to 0
             shape.color = Number(r.color || 0);
             shape.d = true;
             return shape;
         });
-
         // Add bodies in batches of 100
+        // ... (rest of function is unchanged) ...
         for (let i = 0; i < Math.ceil(map.physics.shapes.length / 100); i++) {
             let body = w.bonkHost.bigClass.getNewBody();
             body.p = [-935, -350];
@@ -531,20 +542,24 @@ async function createAndSetMap(inputText) {
             fixture.sh = i;
             fixture.d = r.isDeath;
             fixture.re = r.isBouncy ? null : -1;
-            fixture.fr = r.friction;
+            fixture.fr
+                = r.friction;
             fixture.np = r.noPhysics;
             fixture.ng = r.noGrapple;
-            fixture.f = r.color;
+            // Old format doesn't have color, so Number(r.color || 0) will correctly default to 0
+            fixture.f = Number(r.color || 0);
 
             if (r.isCapzone) {
                 fixture.n = r.id + '. CZ';
             } else if (r.isNoJump) {
+
                 fixture.n = r.id + '. NoJump';
             } else if (r.noPhysics) {
                 fixture.n = r.id + '. NoPhysics';
             } else {
                 fixture.n = r.id + '. Shape';
             }
+
 
             return fixture;
         });
@@ -731,9 +746,55 @@ function convertGameDataToJSON() {
         }
 
         if (finalObject) {
+            // --- Store the original decimal color directly on the finalObject ---
+            // --- This is needed for the color extraction step later ---
+            finalObject._originalDecimalColor = fixture.f || 16777215; // Store original color
             exportedObjects.push(finalObject);
         }
     }
+
+
+    // --- NEW: Extract Colors ---
+    let foundColors = {
+        background: null,
+        none: null,
+        bouncy: null,
+        death: null
+    };
+
+    for (const obj of exportedObjects) {
+        const colorDecimal = obj._originalDecimalColor; // Use the stored original color
+
+        // Background color (identified by isBgLine)
+        if (obj.isBgLine && foundColors.background === null) {
+            foundColors.background = decimalToRgb(colorDecimal);
+        }
+        // Bouncy color
+        else if (obj.isBouncy && foundColors.bouncy === null) {
+            foundColors.bouncy = decimalToRgb(colorDecimal);
+        }
+        // Death color
+        else if (obj.isDeath && foundColors.death === null) {
+            foundColors.death = decimalToRgb(colorDecimal);
+        }
+        // Normal color (not BG, not bouncy, not death)
+        else if (!obj.isBgLine && !obj.isBouncy && !obj.isDeath && foundColors.none === null) {
+            foundColors.none = decimalToRgb(colorDecimal);
+        }
+
+        // Optimization: Stop if all colors are found
+        if (foundColors.background && foundColors.none && foundColors.bouncy && foundColors.death) {
+            break;
+        }
+    }
+
+    // Assign defaults if any color wasn't found in the map data
+    const finalColors = {
+        background: foundColors.background || "rgb(0, 0, 0)",
+        none: foundColors.none || "rgb(255, 255, 255)",
+        bouncy: foundColors.bouncy || "rgb(167, 196, 190)",
+        death: foundColors.death || "rgb(255, 0, 0)",
+    };
 
     // Handle spawn point
     const spawn = (gameMap.spawns && gameMap.spawns.length > 0)
@@ -748,7 +809,12 @@ function convertGameDataToJSON() {
         version: 1,
         spawn: spawn,
         mapSize: mapSize,
-        objects: exportedObjects,
+        objects: exportedObjects.map(obj => {
+            // Remove the temporary _originalDecimalColor property before final output
+            const { _originalDecimalColor, ...rest } = obj;
+            return rest;
+        }),
+        colors: finalColors, // --- Add the extracted colors object ---
     };
 
     const jsonString = JSON.stringify(outputJSON, null, 2);
@@ -789,6 +855,15 @@ function transformMapSizeFromGameData(mapSize) {
 
     // Look up the new map size from the reversed map
     return reversedMap[mapSize] || 9; // Default to 9 if no match
+}
+
+function decimalToRgb(decimal) {
+  if (typeof decimal !== 'number' || !isFinite(decimal)) return "rgb(255, 255, 255)"; // Default white for invalid input
+  decimal = Math.max(0, Math.min(16777215, Math.floor(decimal))); // Clamp to valid 24-bit range
+  const r = (decimal >> 16) & 0xff;
+  const g = (decimal >> 8) & 0xff;
+  const b = decimal & 0xff;
+  return `rgb(${r}, ${g}, ${b})`;
 }
 
 let injector = str => {
