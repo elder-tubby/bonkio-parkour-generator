@@ -682,6 +682,14 @@ function convertGameDataToJSON() {
         }
     });
 
+    // Create a map to find the body a fixture belongs to and store its bounciness
+    const bodyBouncinessMap = new Map();
+    gameMap.physics.bodies.forEach(body => {
+        body.fx.forEach(fixtureIndex => {
+            bodyBouncinessMap.set(fixtureIndex, body.s.re);
+        });
+    });
+
     // Loop through each fixture to process its corresponding shape
     for (let i = 0; i < fixtures.length; i++) {
         const fixture = fixtures[i];
@@ -691,13 +699,47 @@ function convertGameDataToJSON() {
         const bodyPos = bodyMap.get(i) || [0, 0];
         const id = i; // Use the fixture index as the unique ID
 
+        // Determine if the platform is “bouncy”. When bounciness was null, it meant the platform is bouncy.
+
+        // Get the body's bounciness or default to 0 if not found
+        const bodyBounciness = bodyBouncinessMap.get(i) ?? 0;
+        let isBouncy = false;
+
+        // Determine isBouncy based on body and fixture bounciness
+        if (bodyBounciness > -0.95) {
+            if (fixture.re === null || fixture.re === undefined) {
+                isBouncy = true;
+            } else {
+                isBouncy = fixture.re > -0.95;
+            }
+        } else {
+            if (fixture.re === null || fixture.re === undefined) {
+                isBouncy = false;
+            } else {
+                isBouncy = fixture.re > -0.95;
+            }
+        }
+
+
+        const isDeath = !!fixture.d;
+
+        if (isDeath) {
+            isBouncy = false;
+        }
+
+        const bounciness = isBouncy ? null : -1;
+
+
         // Common properties derived from the fixture
         const isCapzone = capZoneMap.get(i) === 'capzone';
         const isNoJump = capZoneMap.get(i) === 'nojump';
-        const isDeath = !!fixture.d;
-        const isBouncy = fixture.re === null; // In the game engine, `null` signifies bounciness
         const noPhysics = !!fixture.np;
         const noGrapple = !!fixture.ng;
+
+        if (isCapzone) {
+            isBouncy = false;
+        }
+
 
         // Base object with properties shared by all shapes
         const baseObject = {
@@ -770,15 +812,15 @@ function convertGameDataToJSON() {
             foundColors.background = decimalToRgb(colorDecimal);
         }
         // Bouncy color
-        else if (obj.isBouncy && foundColors.bouncy === null) {
+        else if (obj.isBouncy && !obj.isDeath && !obj.noPhysics && foundColors.bouncy === null) {
             foundColors.bouncy = decimalToRgb(colorDecimal);
         }
         // Death color
-        else if (obj.isDeath && foundColors.death === null) {
+        else if (obj.isDeath && !obj.noPhysics && foundColors.death === null) {
             foundColors.death = decimalToRgb(colorDecimal);
         }
         // Normal color (not BG, not bouncy, not death)
-        else if (!obj.isBgLine && !obj.isBouncy && !obj.isDeath && foundColors.none === null) {
+        else if (!obj.isBgLine && !obj.isBouncy && !obj.noPhysics && !obj.isDeath && foundColors.none === null) {
             foundColors.none = decimalToRgb(colorDecimal);
         }
 
@@ -809,7 +851,8 @@ function convertGameDataToJSON() {
         version: 1,
         spawn: spawn,
         mapSize: mapSize,
-        objects: exportedObjects.map(obj => {
+        // --- FIX: Reverse the objects array to match render order ---
+        objects: exportedObjects.reverse().map(obj => {
             // Remove the temporary _originalDecimalColor property before final output
             const { _originalDecimalColor, ...rest } = obj;
             return rest;
@@ -858,12 +901,12 @@ function transformMapSizeFromGameData(mapSize) {
 }
 
 function decimalToRgb(decimal) {
-  if (typeof decimal !== 'number' || !isFinite(decimal)) return "rgb(255, 255, 255)"; // Default white for invalid input
-  decimal = Math.max(0, Math.min(16777215, Math.floor(decimal))); // Clamp to valid 24-bit range
-  const r = (decimal >> 16) & 0xff;
-  const g = (decimal >> 8) & 0xff;
-  const b = decimal & 0xff;
-  return `rgb(${r}, ${g}, ${b})`;
+    if (typeof decimal !== 'number' || !isFinite(decimal)) return "rgb(255, 255, 255)"; // Default white for invalid input
+    decimal = Math.max(0, Math.min(16777215, Math.floor(decimal))); // Clamp to valid 24-bit range
+    const r = (decimal >> 16) & 0xff;
+    const g = (decimal >> 8) & 0xff;
+    const b = decimal & 0xff;
+    return `rgb(${r}, ${g}, ${b})`;
 }
 
 let injector = str => {
