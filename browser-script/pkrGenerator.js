@@ -458,13 +458,25 @@ async function createAndSetMap(inputText) {
             }
         } catch (error) {
             console.error('Error parsing JSON:', error);
+                inputData = {}; // fallback to empty obj
+
         }
         // Extract spawn values
-        const spawnX = inputData.spawn.spawnX;
-        const spawnY = inputData.spawn.spawnY;
+const spawnObj = inputData.spawn || {};
 
-        const mapSize = getProcessedMapSize(inputData);
+const spawnX = Number(spawnObj.spawnX ?? spawnObj.x ?? 0);  // default 0
+const spawnY = Number(spawnObj.spawnY ?? spawnObj.y ?? 0);  // default 0
+let mapSize = 7; // default
 
+
+try {
+    const processed = getProcessedMapSize(inputData);
+    if (processed && !isNaN(processed)) {
+        mapSize = processed;
+    }
+} catch (e) {
+    console.warn("Map size fallback to default (7).");
+}
         map.m.a =
             w.bonkHost.players[
             w.bonkHost.toolFunctions.networkEngine.getLSID()
@@ -788,55 +800,11 @@ function convertGameDataToJSON() {
         }
 
         if (finalObject) {
-            // --- Store the original decimal color directly on the finalObject ---
-            // --- This is needed for the color extraction step later ---
-            finalObject._originalDecimalColor = fixture.f || 16777215; // Store original color
             exportedObjects.push(finalObject);
         }
     }
 
 
-    // --- NEW: Extract Colors ---
-    let foundColors = {
-        background: null,
-        none: null,
-        bouncy: null,
-        death: null
-    };
-
-    for (const obj of exportedObjects) {
-        const colorDecimal = obj._originalDecimalColor; // Use the stored original color
-
-        // Background color (identified by isBgLine)
-        if (obj.isBgLine && foundColors.background === null) {
-            foundColors.background = decimalToRgb(colorDecimal);
-        }
-        // Bouncy color
-        else if (obj.isBouncy && !obj.isDeath && !obj.noPhysics && foundColors.bouncy === null) {
-            foundColors.bouncy = decimalToRgb(colorDecimal);
-        }
-        // Death color
-        else if (obj.isDeath && !obj.noPhysics && foundColors.death === null) {
-            foundColors.death = decimalToRgb(colorDecimal);
-        }
-        // Normal color (not BG, not bouncy, not death)
-        else if (!obj.isBgLine && !obj.isBouncy && !obj.noPhysics && !obj.isDeath && foundColors.none === null) {
-            foundColors.none = decimalToRgb(colorDecimal);
-        }
-
-        // Optimization: Stop if all colors are found
-        if (foundColors.background && foundColors.none && foundColors.bouncy && foundColors.death) {
-            break;
-        }
-    }
-
-    // Assign defaults if any color wasn't found in the map data
-    const finalColors = {
-        background: foundColors.background || "rgb(0, 0, 0)",
-        none: foundColors.none || "rgb(255, 255, 255)",
-        bouncy: foundColors.bouncy || "rgb(167, 196, 190)",
-        death: foundColors.death || "rgb(255, 0, 0)",
-    };
 
     // Handle spawn point
     const spawn = (gameMap.spawns && gameMap.spawns.length > 0)
@@ -852,12 +820,7 @@ function convertGameDataToJSON() {
         spawn: spawn,
         mapSize: mapSize,
         // --- FIX: Reverse the objects array to match render order ---
-        objects: exportedObjects.reverse().map(obj => {
-            // Remove the temporary _originalDecimalColor property before final output
-            const { _originalDecimalColor, ...rest } = obj;
-            return rest;
-        }),
-        colors: finalColors, // --- Add the extracted colors object ---
+        objects: exportedObjects.reverse()
     };
 
     const jsonString = JSON.stringify(outputJSON, null, 2);
